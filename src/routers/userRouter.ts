@@ -2,7 +2,7 @@ import express, { Router, Request, Response, NextFunction } from 'express';
 import { emailSignUp, logIn, userIsExistByEmail } from '../services/user/userService';
 import { body } from 'express-validator';
 import validateHandler from '../middlewares/validateHandler/validateHandler';
-import { createToken, verifyToken } from '../utils/user/auth';
+import { createToken } from '../utils/user/auth';
 
 const router: Router = express.Router();
 
@@ -54,7 +54,12 @@ router.post('/log-in', async(req:Request, res:Response, next: NextFunction)=>{
             result: email,
         });  
     } catch (err) {
-        next(err);
+        if(err instanceof Error){
+            res.status(200).json({
+                success: false,
+                message: err.message,
+            });
+        }
     }
 })
 

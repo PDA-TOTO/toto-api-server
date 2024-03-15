@@ -5,7 +5,6 @@ import bcrypt from 'bcrypt';
 import { VisibleUser } from './userServiceReturnType';
 import ApplicationError from '../../utils/error/applicationError';
 
-
 dotenv.config();
 
 
@@ -47,14 +46,19 @@ export const logIn = async (email: string, password: string): Promise<VisibleUse
             email: email
         }
     })
-
-    if(user){
-        const auth = await bcrypt.compare(password,user.password);
-        if(auth){
-            return mapToVisibleUser(user);
+    try{
+        if(user){
+            const auth = await bcrypt.compare(password,user.password);
+            
+            if(auth){
+                return mapToVisibleUser(user);
+            }else{
+                throw new ApplicationError(400,"비밀번호가 일치하지 않습니다.");
+            } 
+        }else{
+            throw new ApplicationError(400,"이메일이 존재하지 않습니다.");
         }
-        throw new ApplicationError(400,"비밀번호가 일치하지 않습니다.");
-    }else{
-        throw new ApplicationError(400,"이메일이 존재하지 않습니다.");
+    }catch(error){
+        throw error;
     }
 };
