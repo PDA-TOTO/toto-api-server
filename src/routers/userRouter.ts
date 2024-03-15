@@ -1,7 +1,8 @@
 import express, { Router, Request, Response, NextFunction } from 'express';
-import { emailSignUp, userIsExistByEmail } from '../services/user/userService';
+import { emailSignUp, logIn, userIsExistByEmail } from '../services/user/userService';
 import { body } from 'express-validator';
 import validateHandler from '../middlewares/validateHandler/validateHandler';
+import { createToken, verifyToken } from '../utils/user/auth';
 
 const router: Router = express.Router();
 
@@ -35,5 +36,40 @@ router.post('/sign-up', signUpValidator, async (req: Request, res: Response, nex
         next(err);
     }
 });
+
+router.post('/log-in', async(req:Request, res:Response, next: NextFunction)=>{
+    try{
+        const{email,password} = req.body;
+        const user = await logIn(email,password)
+    
+        const token = createToken(user);
+    
+        res.cookie("authToken", token, {
+          httpOnly: true,
+        })
+    
+        res.status(200).json({
+            success: true,
+            message: '로그인 완료',
+            result: email,
+        });  
+    } catch (err) {
+        next(err);
+    }
+})
+
+
+
+router.post('/log-out', async(req:Request, res:Response, next: NextFunction)=>{
+    res.cookie("authToken",{}, {
+        httpOnly : true,
+        expires: new Date(Date.now()),
+    });
+
+    res.status(200).json({
+        success: true,
+        message: '로그아웃 완료',
+    });  
+})
 
 export default router;
