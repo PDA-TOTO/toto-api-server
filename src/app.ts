@@ -8,7 +8,6 @@ import userRouter from './routers/userRouter';
 import ApplicationError from './utils/error/applicationError';
 import stokRouter from "./routers/stockRouter"
 
-
 const app: Express = express();
 
 // Main DB Connection
