@@ -4,13 +4,9 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { VisibleUser } from './userServiceReturnType';
 import ApplicationError from '../../utils/error/applicationError';
-
 dotenv.config();
 
-
 const userRepository = AppDataSource.getRepository(User);
-
-
 
 //SignUp
 export const emailSignUp = async (email: string, password: string): Promise<VisibleUser> => {
