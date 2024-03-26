@@ -1,17 +1,19 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import CODE from './codeEntity';
+import PortfolioItems from './PortfolioItemsEntity';
+import User from './userEntity';
 
 // nullable default is false
 @Entity("PORTFOLIO")
 export default class PORTFOILIO {
+
     @PrimaryGeneratedColumn()
     id: Number;
 
-    @Column({ type: 'varchar', length: '30', comment: '회원 이메일', unique: true })
-    portId: Number;
+    @ManyToOne(() => User)
+    @JoinColumn({name:'userId'})
+    user : User;
 
-    @Column({ type: 'float', comment: '비중', unique: true })
-    stock: String;
-
-    @CreateDateColumn({ comment: '회원가입날짜' })
-    weight: Date;
+    @Column({ comment: '포트이름'})
+    portName : String;
 }

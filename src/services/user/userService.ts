@@ -25,6 +25,10 @@ export const userIsExistByEmail = async (email: string): Promise<boolean> => {
     return await userRepository.existsBy({ email: email });
 };
 
+export const userFindByEmail = async (email: string): Promise<User | null> => {
+    return await userRepository.findOne({where: {email: email}});
+}
+
 const mapToVisibleUser = (user: User): VisibleUser => {
     return {
         id: user.id,

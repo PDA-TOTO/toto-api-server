@@ -6,8 +6,8 @@ import { AppDataSource } from './dbs/main/dataSource';
 import errorHandler from './middlewares/errorHandler/errorHandler';
 import userRouter from './routers/userRouter';
 import ApplicationError from './utils/error/applicationError';
-import stokRouter from "./routers/stockRouter"
-
+import stokRouter from "./routers/stockRouter";
+import portfolioRouter from "./routers/portfolioRouter"
 
 const app: Express = express();
 
@@ -25,6 +25,7 @@ app.use(cors());
 
 app.use('/api/users', userRouter);
 app.use('/api/stocks', stokRouter);
+app.use('/api/portfolios', portfolioRouter);
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));
