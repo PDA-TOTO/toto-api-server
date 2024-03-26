@@ -4,17 +4,13 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { VisibleUser } from './userServiceReturnType';
 import ApplicationError from '../../utils/error/applicationError';
-<<<<<<< HEAD
 import Account from '../../dbs/main/entities/accountEntity';
 
-=======
->>>>>>> 28b886664572a21d60da768bfae506fec286d1a9
 dotenv.config();
 
 const userRepository = AppDataSource.getRepository(User);
 const accountRepository = AppDataSource.getRepository(Account);
 
-<<<<<<< HEAD
 // 계좌 번호를 랜덤으로 생성하는 함수
 const generateAccountNumber = () => {
     const accountNumberLength = 11; // 계좌 번호의 길이를 설정
@@ -29,18 +25,6 @@ const generateAccountNumber = () => {
         }
     }
     return accountNumber;
-=======
-//SignUp
-export const emailSignUp = async (email: string, password: string): Promise<VisibleUser> => {
-    // hashing
-    const saltRound: number = Number(process.env.SALT_ROUND);
-    const salt = await bcrypt.genSalt(saltRound);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await userRepository.save({ email: email, password: hashedPassword });
-
-    return mapToVisibleUser(user);
->>>>>>> 28b886664572a21d60da768bfae506fec286d1a9
 };
 
 
