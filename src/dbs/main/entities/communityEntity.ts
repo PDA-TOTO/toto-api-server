@@ -13,8 +13,8 @@ export default class Community {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne((type) => CODE, { cascade: true })
-  @JoinColumn()
+  @OneToOne(() => CODE, { cascade: true })
+  @JoinColumn({ name: "code" })
   code: CODE;
 
   @Column({ type: "varchar", length: 100, comment: "투표 주제" })
