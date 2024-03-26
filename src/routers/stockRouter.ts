@@ -24,7 +24,6 @@ router.get('/:code/finance', async (req: Request, res: Response, next: NextFunct
     }
 });
 
-
 // 주식 뉴스 가져오기
 router.get(
   "/:stockId/news",

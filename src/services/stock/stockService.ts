@@ -30,9 +30,9 @@ type FinanceResponse = {
     eps: number;
     lbltRate: number;
     bps: number;
-    revRate: number;
     incomeRate: number;
-    netincomeRate: number;
+    incomeGrownthRate: number;
+    netincomeGrownthRate: number;
     per: number;
     cap: number;
     pbr: number;
@@ -41,6 +41,8 @@ type FinanceResponse = {
     quickRatio: number;
     consensus: number;
     beta: number;
+    revGrownthRate: number;
+    netincomeRate: number;
 };
 
 const toFinanceResponse = (price: number, finances: Finance[]): FinanceResponse => {
@@ -70,9 +72,11 @@ const toFinanceResponse = (price: number, finances: Finance[]): FinanceResponse 
         quickRatio: recent.quickRatio,
         consensus: recent.consensus,
         beta: recent.beta,
-        revRate: ((recent.rev - old.rev) / old.rev) * 100,
-        incomeRate: ((recent.income - old.income) / old.income) * 100,
-        netincomeRate: ((recent.netincome - old.netincome) / old.netincome) * 100,
+        revGrownthRate: ((recent.rev - old.rev) / Math.abs(old.rev)) * 100,
+        incomeGrownthRate: ((recent.income - old.income) / Math.abs(old.income)) * 100,
+        netincomeGrownthRate: ((recent.netincome - old.netincome) / Math.abs(old.netincome)) * 100,
+        incomeRate: recent.income / Math.abs(recent.rev), // 영업 이익률
+        netincomeRate: recent.netincome / Math.abs(recent.rev), // 순이익률
     };
 
     return finance;
