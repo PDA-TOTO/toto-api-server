@@ -103,8 +103,8 @@ export const getRecentFinance = async (code: string): Promise<FinanceResponse> =
     return toFinanceResponse(price[0].ePr, finances.slice(0, 4));
 };
 
-    return user
-};
+//     return user
+// };
 
 export const stocksGetAllByCode = async(codes: string[]):Promise<CODE[]> => {
     return await stockRepository.find({where: {krxCode: In(codes)}});

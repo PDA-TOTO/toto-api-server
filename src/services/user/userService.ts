@@ -29,6 +29,10 @@ export const userFindByEmail = async (email: string): Promise<User | null> => {
     return await userRepository.findOne({where: {email: email}});
 }
 
+export const userFindById = async (userId: number): Promise<User | null> => {
+    return await userRepository.findOne({where: {id : userId}});
+}
+
 const mapToVisibleUser = (user: User): VisibleUser => {
     return {
         id: user.id,
