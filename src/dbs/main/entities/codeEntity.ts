@@ -1,16 +1,31 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import Finance from './financeEntity';
+import Price from './priceEntity';
 
-@Entity("CODE")
-export default class CODE{
-    @PrimaryGeneratedColumn()
-    id : number;
+export enum CodeType {
+    STOCK = 'STOCK',
+    ETF = 'ETF',
+}
 
-    @Column({type : 'varchar', length : '30', comment :'거래소 코드'})
-    krxCode : string;
+@Entity('CODE')
+export default class CODE {
+    @PrimaryColumn({
+        name: 'krxCode',
+        type: 'varchar',
+        length: '30',
+        comment: '거래소 코드',
+    })
+    krxCode: string;
 
-    @Column({type : 'varchar', length : '30', comment :'종목명'})
-    name : string;
+    @Column({ name: 'name', type: 'varchar', length: '30', comment: '종목명', unique: true, nullable: false })
+    name: string;
 
-    @Column({type : 'varchar', length : '30', comment :'타입'})
-    type : string;
+    // STOCK, ETF
+    @Column({ name: 'type', type: 'enum', comment: '타입', nullable: false, enum: CodeType })
+    type: CodeType;
+
+    @OneToMany(() => Finance, (finance) => finance.code)
+    finances: Finance[];
+    @OneToMany(() => Price, (price) => price.code)
+    prices: Price[];
 }

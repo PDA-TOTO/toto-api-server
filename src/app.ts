@@ -6,8 +6,12 @@ import { AppDataSource } from './dbs/main/dataSource';
 import errorHandler from './middlewares/errorHandler/errorHandler';
 import userRouter from './routers/userRouter';
 import ApplicationError from './utils/error/applicationError';
+<<<<<<< HEAD
 import stokRouter from "./routers/stockRouter";
 import portfolioRouter from "./routers/portfolioRouter"
+=======
+import stokRouter from "./routers/stockRouter"
+>>>>>>> 28b886664572a21d60da768bfae506fec286d1a9
 
 const app: Express = express();
 
