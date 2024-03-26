@@ -5,7 +5,7 @@ services:
         container_name: toto-main-db
         environment:
             - MYSQL_ROOT_PASSWORD=root
-            - MYSQL_DATABASE=toto
+            - MYSQL_DATABASE=my_database
             - TZ="Asia/Seoul"
         ports:
             - '3312:3306'

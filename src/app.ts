@@ -9,24 +9,28 @@ import ApplicationError from './utils/error/applicationError';
 import cookies = require("cookie-parser");
 
 dotenv.config();
+import stokRouter from "./routers/stockRouter"
 
 const app: Express = express();
+
+// Main DB Connection
+AppDataSource.initialize().then(() => console.log('Main DB Connected!'));
+    
+const SERVER_PORT = process.env.SERVER_PORT;        
+app.listen(SERVER_PORT, () => {
+    console.log(`Server Start: Listening Port on ${SERVER_PORT}`);
+});
+
+app.use(cookies())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({origin:'http://localhost:5173',credentials:true}));
-app.use(cookies());
+app.use(cors());
 
 app.use('/api/users', userRouter);
+app.use('/api/stocks', stokRouter);
+
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));
 });
 
 app.use(errorHandler);
-
-// Main DB Connection
-AppDataSource.initialize().then(() => console.log('Main DB Connected!'));
-
-const SERVER_PORT = process.env.SERVER_PORT;
-app.listen(SERVER_PORT, () => {
-    console.log(`Server Start: Listening Port on ${SERVER_PORT}`);
-});
