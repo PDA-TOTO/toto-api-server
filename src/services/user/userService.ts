@@ -4,24 +4,28 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { VisibleUser } from './userServiceReturnType';
 import ApplicationError from '../../utils/error/applicationError';
+import Account from '../../dbs/main/entities/accountEntity';
 
 dotenv.config();
 
 
 const userRepository = AppDataSource.getRepository(User);
+const accountRepository = AppDataSource.getRepository(Account);
 
-
-
-//SignUp
-export const emailSignUp = async (email: string, password: string): Promise<VisibleUser> => {
-    // hashing
-    const saltRound: number = Number(process.env.SALT_ROUND);
-    const salt = await bcrypt.genSalt(saltRound);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await userRepository.save({ email: email, password: hashedPassword });
-
-    return mapToVisibleUser(user);
+// 계좌 번호를 랜덤으로 생성하는 함수
+const generateAccountNumber = () => {
+    const accountNumberLength = 11; // 계좌 번호의 길이를 설정
+    const characters = '0123456789'; // 계좌 번호에 포함될 문자열
+    let accountNumber = '100-';
+    for (let i = 0; i < accountNumberLength+1; i++) {
+        if(i === 7){
+            accountNumber += '-'
+        }else{
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            accountNumber += characters[randomIndex];
+        }
+    }
+    return accountNumber;
 };
 
 
@@ -32,11 +36,37 @@ export const userIsExistByEmail = async (email: string): Promise<boolean> => {
 const mapToVisibleUser = (user: User): VisibleUser => {
     return {
         id: user.id,
+        account : user.account,
+        experience: user.experience,
         email: user.email,
-        exp: user.exp,
+        tendency: user.tendency,
         createdAt: user.createdAt,
     };
 };
+
+
+//SignUp
+export const emailSignUp = async (email: string, password: string): Promise<VisibleUser> => {
+    // hashing
+    const saltRound: number = Number(process.env.SALT_ROUND);
+    const salt = await bcrypt.genSalt(saltRound);
+    const hashedPassword = await bcrypt.hash(password, salt)
+    const account = generateAccountNumber();
+
+    const newAccount = new Account()
+    newAccount.account = account;
+    newAccount.amount = 10000000;
+    const accountOBJ = await accountRepository.save(newAccount)
+
+    const user = await userRepository.save({ email: email, password: hashedPassword, account: accountOBJ})
+    
+    return mapToVisibleUser(user);
+
+
+};
+
+
+
 
 //LogIn
 export const logIn = async (email: string, password: string): Promise<VisibleUser> => {
@@ -44,6 +74,9 @@ export const logIn = async (email: string, password: string): Promise<VisibleUse
     const user = await userRepository.findOne({
         where:{
             email: email
+        },
+        relations:{
+            account: true
         }
     })
     try{
@@ -62,3 +95,40 @@ export const logIn = async (email: string, password: string): Promise<VisibleUse
         throw error;
     }
 };
+
+
+//Update Investment Tendency
+export const updateTendency = async (email:string, point: number): Promise<string>=> {
+    
+    if(point <= 20){
+        userRepository.update({email: email},{tendency:1})
+        return '안정형'
+    }else if(point <= 40){
+        userRepository.update({email: email},{tendency:2})
+        return '안정추구형'
+    }else if(point <= 60){
+        userRepository.update({email: email},{tendency:3})
+        return '위험중립형'
+    }else if(point <= 80){
+        userRepository.update({email: email},{tendency:4})
+        return '적극투자형'
+    }else{
+        userRepository.update({email: email},{tendency:5})
+        return '공격투자형'
+    }
+}
+
+export const getMyInfo = async (email:string): Promise<VisibleUser|null>=> {
+    
+    const user = await userRepository.findOne({
+        where:{
+            email: email
+        },
+        relations:{
+            account: true
+        }
+    })
+
+    if(user) return mapToVisibleUser(user);
+    else return null;
+}
