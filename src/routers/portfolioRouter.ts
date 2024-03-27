@@ -19,7 +19,7 @@ router.post('/create', async(req:Request, res:Response, next: NextFunction)=>{
 
 router.get('/portNames', async(req:Request, res:Response, next: NextFunction)=>{
     // console.log(req)
-    const userId = req.user
+    const userId = req.body.user
     // console.log("userId", userId)
     const User : User | null = await userFindById(userId)
     const stocks : PORTFOILIO[] = await getPortNames(User);

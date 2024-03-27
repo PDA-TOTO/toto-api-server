@@ -15,6 +15,7 @@ const portfolioItemsRepository = AppDataSource.getRepository(PORTFOILIOITEMS);
 const portfolioRepository = AppDataSource.getRepository(PORTFOILIO)
 
 type PortFolioItemITEMS = {
+    krxCode : string,
     code: string,
     stock : string,
     weight : Number,
