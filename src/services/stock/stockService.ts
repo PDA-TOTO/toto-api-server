@@ -4,14 +4,11 @@ import dotenv from 'dotenv';
 import Finance from '../../dbs/main/entities/financeEntity';
 import ApplicationError from '../../utils/error/applicationError';
 import Price from '../../dbs/main/entities/priceEntity';
-<<<<<<< HEAD
 import { In } from 'typeorm';
-=======
 import { userFindByEmail } from '../user/userService';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import Account from '../../dbs/main/entities/accountEntity';
 import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
->>>>>>> 25630ee88f96ebb976ed2881648ce6ae4f261fe5
 dotenv.config();
 
 const stockRepository = AppDataSource.getRepository(CODE);

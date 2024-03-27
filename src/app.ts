@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-import 'reflect-metadata';
-import express, { Express, NextFunction, Request, Response } from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import { AppDataSource } from './dbs/main/dataSource';
-import errorHandler from './middlewares/errorHandler/errorHandler';
-import userRouter from './routers/userRouter';
-import ApplicationError from './utils/error/applicationError';
-import stokRouter from "./routers/stockRouter";
-import portfolioRouter from "./routers/portfolioRouter"
-=======
 import "reflect-metadata";
 import express, { Express, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
@@ -17,14 +5,15 @@ import cors from "cors";
 import { AppDataSource } from "./dbs/main/dataSource";
 import errorHandler from "./middlewares/errorHandler/errorHandler";
 import userRouter from "./routers/userRouter";
+
+import stockRouter from "./routers/stockRouter";
+import portfolioRouter from "./routers/portfolioRouter"
 import communityRouter from "./routers/communityRouter";
 import ApplicationError from "./utils/error/applicationError";
 import cookieParser = require("cookie-parser");
 
 dotenv.config();
-import stokRouter from './routers/stockRouter';
 import { VisibleUser } from './services/user/userServiceReturnType';
->>>>>>> 25630ee88f96ebb976ed2881648ce6ae4f261fe5
 
 const app: Express = express();
 
@@ -54,15 +43,10 @@ app.use(
     })
 );
 
-<<<<<<< HEAD
 app.use('/api/users', userRouter);
-app.use('/api/stocks', stokRouter);
 app.use('/api/portfolios', portfolioRouter);
-=======
-app.use("/api/users", userRouter);
 app.use("/api/stocks", stockRouter);
 app.use("/api/community", communityRouter);
->>>>>>> 25630ee88f96ebb976ed2881648ce6ae4f261fe5
 
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
   next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));
