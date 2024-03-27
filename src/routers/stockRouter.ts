@@ -1,8 +1,10 @@
 import express, { Router, Request, Response, NextFunction } from 'express';
-import { getRecentFinance, getStockInfoWithChart, showStocks } from '../services/stock/stockService';
+import { buyStock, getRecentFinance, getStockInfoWithChart, showStocks } from '../services/stock/stockService';
 import axios from 'axios';
 import { toDate } from '../utils/date/toDate';
-import { query } from 'express-validator';
+import { authenticate } from '../middlewares/authenticate/authenticate';
+import { body } from 'express-validator';
+import validateHandler from '../middlewares/validateHandler/validateHandler';
 
 const router: Router = express.Router();
 
@@ -59,6 +61,31 @@ router.get('/majors', async (req: Request, res: Response, next: NextFunction) =>
     const response = await axios.get(url);
     console.log(response.data);
     res.send(response.data);
+});
+
+// 매수
+// 유저, 수량, 체결가, 종목코드
+const buyMiddlewares = [
+    authenticate,
+    body('amount').isNumeric().withMessage('수량은 숫자이어야 합니다.'),
+    body('price').isNumeric().withMessage('가격은 숫자이어야 합니다.'),
+    validateHandler,
+];
+router.post('/:code/buy', buyMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { code } = req.params;
+
+        const { amount, price } = req.body;
+
+        const result = await buyStock(code, req.user!.email, amount, price);
+        res.status(201).json({
+            success: true,
+            message: '매수 완료',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;
