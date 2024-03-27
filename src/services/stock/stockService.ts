@@ -101,3 +101,82 @@ export const getRecentFinance = async (code: string): Promise<FinanceResponse> =
 
     return toFinanceResponse(price[0].ePr, finances.slice(0, 4));
 };
+
+export type StockInfoResponse = {
+    chartLength: number;
+    chart: any[];
+    code: string;
+    name: string;
+    bundleUnit: string;
+};
+
+export const getStockInfoWithChart = async (
+    code: string,
+    after?: Date | null,
+    bundleUnit?: 'DAY' | 'MONTH' | 'YEAR' | undefined
+): Promise<StockInfoResponse> => {
+    const stockCode: CODE | null = await stockFindByCode(code);
+    if (!stockCode) throw new ApplicationError(400, '해당 code와 매핑되는 종목이 존재하지 않음');
+
+    if (!after) {
+        after = new Date();
+        after.setMonth(after.getMonth() - 2);
+    }
+
+    if (!bundleUnit) {
+        bundleUnit = 'DAY';
+    }
+
+    if (bundleUnit === 'YEAR') {
+        const stockCharts = await priceRepository
+            .createQueryBuilder('price')
+            .select(`DATE_FORMAT(price.date, '%Y') as year, ceiling(avg(price.ePr)) as epr`)
+            .where('code = :code', { code: code })
+            .andWhere('date between :prev and now()', { prev: after })
+            .orderBy('year', 'DESC')
+            .groupBy(`DATE_FORMAT(price.date, '%Y')`)
+            .getRawMany();
+
+        return {
+            chartLength: stockCharts.length,
+            chart: stockCharts,
+            code: stockCode.krxCode,
+            name: stockCode.name,
+            bundleUnit: bundleUnit,
+        };
+    }
+
+    if (bundleUnit === 'MONTH') {
+        const stockCharts = await priceRepository
+            .createQueryBuilder('price')
+            .select(`DATE_FORMAT(price.date, '%Y-%m') as yymm, ceiling(avg(price.ePr)) as epr`)
+            .where('code = :code', { code: code })
+            .andWhere('date between :prev and now()', { prev: after })
+            .orderBy('yymm', 'DESC')
+            .groupBy(`DATE_FORMAT(price.date, '%Y-%m')`)
+            .getRawMany();
+
+        return {
+            chartLength: stockCharts.length,
+            chart: stockCharts,
+            code: stockCode.krxCode,
+            name: stockCode.name,
+            bundleUnit: bundleUnit,
+        };
+    }
+
+    const stockCharts = await priceRepository
+        .createQueryBuilder('price')
+        .where('code = :code', { code: code })
+        .andWhere('date between :prev and now()', { prev: after })
+        .orderBy('price.date', 'DESC')
+        .getRawMany();
+
+    return {
+        chartLength: stockCharts.length,
+        chart: stockCharts,
+        code: stockCode.krxCode,
+        name: stockCode.name,
+        bundleUnit: bundleUnit,
+    };
+};
