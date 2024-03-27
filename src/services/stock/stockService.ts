@@ -1,6 +1,5 @@
 import { AppDataSource } from '../../dbs/main/dataSource';
 import CODE from '../../dbs/main/entities/codeEntity';
-import dotenv from 'dotenv';
 import Finance from '../../dbs/main/entities/financeEntity';
 import ApplicationError from '../../utils/error/applicationError';
 import Price from '../../dbs/main/entities/priceEntity';
@@ -8,8 +7,6 @@ import { userFindByEmail } from '../user/userService';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import Account from '../../dbs/main/entities/accountEntity';
 import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
-dotenv.config();
-
 const stockRepository = AppDataSource.getRepository(CODE);
 const financeRepository = AppDataSource.getRepository(Finance);
 const priceRepository = AppDataSource.getRepository(Price);
