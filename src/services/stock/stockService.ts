@@ -4,11 +4,16 @@ import dotenv from 'dotenv';
 import Finance from '../../dbs/main/entities/financeEntity';
 import ApplicationError from '../../utils/error/applicationError';
 import Price from '../../dbs/main/entities/priceEntity';
+import { userFindByEmail } from '../user/userService';
+import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
+import Account from '../../dbs/main/entities/accountEntity';
+import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
 dotenv.config();
 
 const stockRepository = AppDataSource.getRepository(CODE);
 const financeRepository = AppDataSource.getRepository(Finance);
 const priceRepository = AppDataSource.getRepository(Price);
+const transactionRepository = AppDataSource.getRepository(StockTransaction);
 
 const stockFindByCode = async (code: string) => {
     return await stockRepository.findOneBy({ krxCode: code });
@@ -179,4 +184,77 @@ export const getStockInfoWithChart = async (
         name: stockCode.name,
         bundleUnit: bundleUnit,
     };
+};
+
+export const buyStock = async (code: string, userEmail: string, amount: number, price: number) => {
+    const user = await userFindByEmail(userEmail);
+    if (!user) {
+        throw new ApplicationError(400, 'No user');
+    }
+
+    if (user.account.amount < amount * price) {
+        throw new ApplicationError(400, '잔고 부족');
+    }
+
+    const stockCode: CODE | null = await stockFindByCode(code);
+    if (!stockCode) throw new ApplicationError(400, '해당 code와 매핑되는 종목이 존재하지 않음');
+
+    let response;
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+        const account: Account = user.account;
+        await queryRunner.manager.getRepository(Account).update(account.id, {
+            amount: account.amount - amount * price,
+        });
+        account.amount -= amount * price; // 모델은 바뀌지 않았기 때문에
+
+        const stockBalanceRepository = queryRunner.manager.getRepository(StockBalance);
+
+        const stockBalanace = await stockBalanceRepository.findOne({
+            where: {
+                account: { id: account.id },
+                code: { krxCode: stockCode.krxCode },
+            },
+        });
+        if (!stockBalanace) {
+            await stockBalanceRepository.save({
+                account: account,
+                code: stockCode,
+                amount: amount,
+                avg: price,
+            });
+        } else {
+            await stockBalanceRepository.update(stockBalanace.id, {
+                avg: () => `(amount * avg + ${price * amount}) / (amount + ${amount})`,
+                amount: () => `amount + ${amount}`,
+            });
+        }
+
+        const stockTransaction = await queryRunner.manager.getRepository(StockTransaction).save({
+            user: user,
+            code: stockCode,
+            price: price,
+            amount: amount,
+        });
+
+        response = {
+            user: { email: user.email, account: account },
+            price: price,
+            amount: amount,
+            code: stockCode,
+            date: stockTransaction.createdAt,
+        };
+
+        await queryRunner.commitTransaction();
+
+        return response;
+    } catch (err) {
+        await queryRunner.rollbackTransaction();
+        throw new ApplicationError(500, '저장되지 않음');
+    } finally {
+        await queryRunner.release();
+    }
 };
