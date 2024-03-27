@@ -11,4 +11,10 @@ router.get(
   }
 );
 
+router.post(
+  "/:krxCode/vote",
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.json("hi");
+  }
+);
 export default router;
