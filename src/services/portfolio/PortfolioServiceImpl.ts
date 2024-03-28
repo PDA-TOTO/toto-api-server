@@ -25,12 +25,18 @@ class PortfolioService implements IPortfolioService {
         this.portfolioRepository = queryRunner.manager.getRepository(PORTFOILIO);
         this.portfolioItemRepository = queryRunner.manager.getRepository(PortfolioItems);
 
-        if (this.queryRunner.root === BalanceService.name) {
+        if (!this.queryRunner.instances) {
+            this.queryRunner.instances = [];
+        }
+
+        this.queryRunner.instances.push(this.name);
+
+        if (this.queryRunner.instances.includes(BalanceService.name)) {
             return;
         }
         this.balanceService = new BalanceService(queryRunner);
 
-        if (this.queryRunner.root === StockService.name) {
+        if (this.queryRunner.instances.includes(StockService.name)) {
             return;
         }
         this.stockService = new StockService(queryRunner);

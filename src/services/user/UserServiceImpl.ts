@@ -23,10 +23,15 @@ export class UserService implements IUserService {
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
         this.userRepository = queryRunner.manager.getRepository(User);
-        if (this.queryRunner.root === BalanceService.name) {
-            return;
+
+        if (!this.queryRunner.instances) {
+            this.queryRunner.instances = [];
         }
 
+        this.queryRunner.instances.push(this.name);
+        if (this.queryRunner.instances.includes(BalanceService.name)) {
+            return;
+        }
         this.balanceService = new BalanceService(queryRunner);
     }
 

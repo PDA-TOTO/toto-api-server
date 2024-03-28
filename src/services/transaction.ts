@@ -28,7 +28,7 @@ export const Transaction = () => {
                 await s.queryRunner.release();
 
                 let queryRunner = AppDataSource.createQueryRunner();
-                queryRunner.root = s.queryRunner.root;
+                queryRunner.instances = [];
                 s.setQueryRunner(queryRunner);
             }
         };
