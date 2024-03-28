@@ -16,7 +16,7 @@ const router: Router = express.Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const stocks = await showStocks();
-    console.log(stocks);
+    // console.log(stocks);
     res.json(stocks);
 });
 

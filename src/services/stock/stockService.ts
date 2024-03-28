@@ -3,6 +3,7 @@ import CODE from '../../dbs/main/entities/codeEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 import ApplicationError from '../../utils/error/applicationError';
 import Price from '../../dbs/main/entities/priceEntity';
+import { In } from 'typeorm';
 import { userFindByEmail } from '../user/userService';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import Account from '../../dbs/main/entities/accountEntity';
@@ -104,6 +105,12 @@ export const getRecentFinance = async (code: string): Promise<FinanceResponse> =
     return toFinanceResponse(price[0].ePr, finances.slice(0, 4));
 };
 
+//     return user
+// };
+
+export const stocksGetAllByCode = async(codes: string[]):Promise<CODE[]> => {
+    return await stockRepository.find({where: {krxCode: In(codes)}});
+}
 export type StockInfoResponse = {
     chartLength: number;
     chart: any[];
