@@ -29,5 +29,8 @@ router.get('/portNames', authenticate, async(req:Request, res:Response, next: Ne
     // return res.json(stocks)
     return res.json(stocks)
 })
-
+router.get('/getstocks',authenticate, async(req:Request, res:Response, next: NextFunction)=>{
+    console.log(req.body)
+    return res.json({data : "hi"})
+})
 export default router;
