@@ -20,4 +20,5 @@ export interface IStockService extends IService {
 
     findByCode(code: string): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
+    getFinance(code: string): Promise<void>;
 }

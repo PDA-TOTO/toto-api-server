@@ -16,12 +16,22 @@ export class StockService implements IStockService {
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
     }
+    getFinance(code: string): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
 
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
         this.stockRepository = queryRunner.manager.getRepository(CODE);
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
-        if (this.queryRunner.root === UserService.name) {
+
+        if (!this.queryRunner.instances) {
+            this.queryRunner.instances = [];
+        }
+
+        this.queryRunner.instances.push(this.name);
+
+        if (this.queryRunner.instances.includes(UserService.name)) {
             return;
         }
 

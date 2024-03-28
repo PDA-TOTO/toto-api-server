@@ -21,7 +21,13 @@ export class BalanceService implements IBalanceService {
         this.queryRunner = queryRunner;
         this.accountRepository = queryRunner.manager.getRepository(Account);
 
-        if (this.queryRunner.root === StockService.constructor.name) {
+        if (!this.queryRunner.instances) {
+            this.queryRunner.instances = [];
+        }
+
+        this.queryRunner.instances.push(this.name);
+
+        if (this.queryRunner.instances.includes(StockService.constructor.name)) {
             return;
         }
 
