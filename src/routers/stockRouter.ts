@@ -49,19 +49,25 @@ const router: Router = express.Router();
 // });
 
 // // 주식 뉴스 가져오기
-// router.get('/:stockId/news', async (req: Request, res: Response, next: NextFunction) => {
-//     const url = `https://m.stock.naver.com/api/news/stock/${req.params.stockId}?pageSize=20&page=1`;
-//     const response = await axios.get(url);
-//     res.send(response.data);
-// });
+router.get(
+  "/:stockId/news",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const url = `https://m.stock.naver.com/api/news/stock/${req.params.stockId}?pageSize=20&page=1`;
+    const response = await axios.get(url);
+    res.send(response.data);
+  }
+);
 
 // // 코스피, 코스닥 가져오기
-// router.get('/majors', async (req: Request, res: Response, next: NextFunction) => {
-//     const url = 'https://m.stock.naver.com/api/index/majors';
-//     const response = await axios.get(url);
-//     console.log(response.data);
-//     res.send(response.data);
-// });
+router.get(
+  "/index/majors",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const url = "https://m.stock.naver.com/api/index/majors";
+    const response = await axios.get(url);
+    console.log(response.data);
+    res.send(response.data);
+  }
+);
 
 // // 매수
 // // 유저, 수량, 체결가, 종목코드

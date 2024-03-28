@@ -48,37 +48,37 @@ export const getCommunityFindByKrxCode = async (code: string) => {
   }
 };
 
-export const submitVote = async (
-  code: string,
-  vote: boolean, // 찬성 true, 반대 false
-  first: boolean // 첫 투표 true, 두 번째부터 false
-) => {
-  const stockCode: CODE | null = await stockFindByCode(code);
-  if (stockCode) {
-    const communityData = await communityRepository.find({
-      where: { code: stockCode },
-    });
-    const yesCount = communityData[0].yesCount;
-    const noCount = communityData[0].noCount;
-    if (vote) {
-      communityRepository.update(
-        { code: stockCode },
-        { yesCount: yesCount + 1 }
-      );
-      if (!first) {
-        communityRepository.update(
-          { code: stockCode },
-          { noCount: noCount - 1 }
-        );
-      }
-    } else if (!vote) {
-      communityRepository.update({ code: stockCode }, { noCount: noCount + 1 });
-      if (!first) {
-        communityRepository.update(
-          { code: stockCode },
-          { yesCount: yesCount - 1 }
-        );
-      }
-    }
-  }
-};
+// export const submitVote = async (
+//   code: string,
+//   vote: boolean, // 찬성 true, 반대 false
+//   first: boolean // 첫 투표 true, 두 번째부터 false
+// ) => {
+//   const stockCode: CODE | null = await stockFindByCode(code);
+//   if (stockCode) {
+//     const communityData = await communityRepository.find({
+//       where: { code: stockCode },
+//     });
+//     const yesCount = communityData[0].yesCount;
+//     const noCount = communityData[0].noCount;
+//     if (vote) {
+//       communityRepository.update(
+//         { code: stockCode },
+//         { yesCount: yesCount + 1 }
+//       );
+//       if (!first) {
+//         communityRepository.update(
+//           { code: stockCode },
+//           { noCount: noCount - 1 }
+//         );
+//       }
+//     } else if (!vote) {
+//       communityRepository.update({ code: stockCode }, { noCount: noCount + 1 });
+//       if (!first) {
+//         communityRepository.update(
+//           { code: stockCode },
+//           { yesCount: yesCount - 1 }
+//         );
+//       }
+//     }
+//   }
+// };
