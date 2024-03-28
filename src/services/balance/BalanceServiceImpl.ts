@@ -4,11 +4,15 @@ import Account from '../../dbs/main/entities/accountEntity';
 import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
 import User from '../../dbs/main/entities/userEntity';
 import { Transaction } from '../transaction';
+import { IStockService } from '../stock/IStockService';
+import { StockService } from '../stock/StockServiceImpl';
+import ApplicationError from '../../utils/error/applicationError';
 
 export class BalanceService implements IBalanceService {
     accountRepository: Repository<Account>;
     stockBalanceRepository: Repository<StockBalance>;
     queryRunner: QueryRunner;
+    stockService: IStockService;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -18,6 +22,26 @@ export class BalanceService implements IBalanceService {
         this.queryRunner = queryRunner;
         this.accountRepository = queryRunner.manager.getRepository(Account);
         this.stockBalanceRepository = queryRunner.manager.getRepository(StockBalance);
+        this.stockService = new StockService(queryRunner);
+    }
+
+    @Transaction()
+    async findByUserId(userId: number): Promise<Account | null> {
+        return await this.accountRepository.findOne({ where: { user: { id: userId } } });
+    }
+
+    @Transaction()
+    async buyStock(userId: number, code: string, price: number, amount: number): Promise<void> {
+        const account = await this.findByUserId(userId);
+
+        if (!account) {
+            throw new ApplicationError(400, '해당 유저의 계좌가 존재하지 않음');
+        }
+    }
+
+    @Transaction()
+    cellStock(userId: number, code: string, price: number, amount: number): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     @Transaction()
@@ -49,4 +73,6 @@ export class BalanceService implements IBalanceService {
         }
         return accountNumber;
     }
+
+    private canDeposit() {}
 }
