@@ -1,16 +1,23 @@
 import { Repository } from 'typeorm';
 import { IService } from '../IService';
 import CODE from '../../dbs/main/entities/codeEntity';
-import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
-import { IBalanceService } from '../balance/IBalanceService';
+import { StockTransaction, TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
 import { IUserService } from '../user/IUserService';
+import { Account } from '../user/userServiceReturnType';
+
+export type CreateStockTransactionLogRequest = {
+    code: CODE;
+    price: number;
+    amount: number;
+    account: Account;
+    transactionType: TransactionType;
+};
 
 export interface IStockService extends IService {
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
-    balanceService: IBalanceService;
     userService: IUserService;
 
-    buyStock(email: string, code: string, amount: number, price: number): Promise<void>;
-    cellStock(email: string, code: string, amount: number, price: number): Promise<void>;
+    findByCode(code: string): Promise<CODE | null>;
+    createLog(request: CreateStockTransactionLogRequest): Promise<void>;
 }

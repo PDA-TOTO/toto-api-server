@@ -24,6 +24,12 @@ declare global {
     }
 }
 
+declare module 'typeorm' {
+    interface QueryRunner {
+        root: string;
+    }
+}
+
 // Main DB Connection
 AppDataSource.initialize().then(() => console.log('Main DB Connected!'));
 

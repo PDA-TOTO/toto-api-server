@@ -1,32 +1,46 @@
 import { Repository, QueryRunner } from 'typeorm';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
-import { IBalanceService } from '../balance/IBalanceService';
-import { IStockService } from './IStockService';
-import { BalanceService } from '../balance/BalanceServiceImpl';
+import { CreateStockTransactionLogRequest, IStockService } from './IStockService';
 import { IUserService } from '../user/IUserService';
 import { UserService } from '../user/UserServiceImpl';
+import { Transaction } from '../transaction';
 
 export class StockService implements IStockService {
+    name: string = 'StockService';
     userService: IUserService;
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
-    balanceService: IBalanceService;
     queryRunner: QueryRunner;
+
+    constructor(queryRunner: QueryRunner) {
+        this.setQueryRunner(queryRunner);
+    }
 
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
         this.stockRepository = queryRunner.manager.getRepository(CODE);
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
-        this.balanceService = new BalanceService(queryRunner);
+        if (this.queryRunner.root === UserService.name) {
+            return;
+        }
+
         this.userService = new UserService(queryRunner);
     }
 
-    buyStock(email: string, code: string, amount: number, price: number): Promise<void> {
-        throw new Error('Method not implemented.');
+    @Transaction()
+    async findByCode(code: string): Promise<CODE | null> {
+        return await this.stockRepository.findOne({ where: { krxCode: code } });
     }
 
-    cellStock(email: string, code: string, amount: number, price: number): Promise<void> {
-        throw new Error('Method not implemented.');
+    @Transaction()
+    async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
+        await this.stockTransactionRepository.save({
+            price: request.price,
+            amount: request.amount,
+            transactionType: request.transactionType,
+            code: request.code,
+            account: request.account,
+        });
     }
 }

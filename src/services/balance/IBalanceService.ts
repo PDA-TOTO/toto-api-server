@@ -1,8 +1,8 @@
 import { Repository } from 'typeorm';
 import { IService } from '../IService';
 import Account from '../../dbs/main/entities/accountEntity';
-import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
 import User from '../../dbs/main/entities/userEntity';
+import { IStockService } from '../stock/IStockService';
 
 export type AccountResponse = {
     id: number;
@@ -12,7 +12,11 @@ export type AccountResponse = {
 
 export interface IBalanceService extends IService {
     accountRepository: Repository<Account>;
-    stockBalanceRepository: Repository<StockBalance>;
+    stockService: IStockService;
 
     createAccount(user: User): Promise<AccountResponse>;
+    findByUserId(userId: number): Promise<Account | null>;
+    findByAccountId(accountId: number): Promise<Account | null>;
+    deposit(accountId: number, amount: number, price: number): Promise<void>;
+    withdraw(accountId: number, amount: number, price: number): Promise<void>;
 }

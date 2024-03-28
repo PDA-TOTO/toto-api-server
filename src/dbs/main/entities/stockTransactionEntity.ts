@@ -1,6 +1,11 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import User from './userEntity';
 import CODE from './codeEntity';
+import PORTFOILIO from './PortfolioEntity';
+
+export enum TransactionType {
+    BUY = 'BUY',
+    CELL = 'CELL',
+}
 
 @Entity('STOCK_TRANSACTION')
 export class StockTransaction {
@@ -13,9 +18,12 @@ export class StockTransaction {
     @Column({ name: 'amount', type: 'int', nullable: false })
     amount: number;
 
-    @ManyToOne(() => User)
-    @JoinColumn({ name: 'userId' })
-    user: User;
+    @Column({ name: 'transaction_type', type: 'enum', enum: TransactionType })
+    transactionType: TransactionType;
+
+    @ManyToOne(() => PORTFOILIO)
+    @JoinColumn({ name: 'portfolioId' })
+    portfolio: PORTFOILIO;
 
     @ManyToOne(() => CODE)
     @JoinColumn({ name: 'code' })
