@@ -29,13 +29,36 @@ export class BalanceService implements IBalanceService {
     }
 
     @Transaction()
+    async findByAccountId(accountId: number): Promise<Account | null> {
+        return await this.accountRepository.findOne({ where: { id: accountId } });
+    }
+
+    @Transaction()
     async deposit(accountId: number, amount: number, price: number): Promise<void> {
-        throw new Error('Method not implemented.');
+        const account = await this.findByAccountId(accountId);
+        if (!account) {
+            throw new ApplicationError(400, '계좌가 존재하지 않음');
+        }
+
+        if (account.amount < amount * price) {
+            throw new ApplicationError(400, '잔고 부족');
+        }
+
+        await this.accountRepository.update(account.id, {
+            amount: () => `amount - ${amount * price}`,
+        });
     }
 
     @Transaction()
     async withdraw(accountId: number, amount: number, price: number): Promise<void> {
-        throw new Error('Method not implemented.');
+        const account = await this.findByAccountId(accountId);
+        if (!account) {
+            throw new ApplicationError(400, '계좌가 존재하지 않음');
+        }
+
+        await this.accountRepository.update(account.id, {
+            amount: () => `amount + ${amount * price}`,
+        });
     }
 
     @Transaction()
@@ -72,6 +95,4 @@ export class BalanceService implements IBalanceService {
         }
         return accountNumber;
     }
-
-    private canDeposit() {}
 }
