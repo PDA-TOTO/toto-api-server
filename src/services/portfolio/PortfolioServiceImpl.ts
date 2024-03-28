@@ -4,7 +4,7 @@ import PortfolioItems from '../../dbs/main/entities/PortfolioItemsEntity';
 import User from '../../dbs/main/entities/userEntity';
 import { IBalanceService } from '../balance/IBalanceService';
 import { IStockService } from '../stock/IStockService';
-import { AddStockInfoRequest, IPortfolioService, SetPortfolioItemRequest } from './IPortFolioService';
+import { AddStockInfoRequest, IPortfolioService, SetPortfolioItemRequest } from './IPortfolioService';
 import { BalanceService } from '../balance/BalanceServiceImpl';
 import { StockService } from '../stock/StockServiceImpl';
 
