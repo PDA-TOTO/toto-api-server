@@ -25,9 +25,9 @@ router.get('/portNames', authenticate, async(req:Request, res:Response, next: Ne
     const userId = req.user?.id;
     // console.log(userId)
     const stocks : PORTFOILIO[] = await getPortNames(user);
-    console.log(stocks)
+    // console.log(stocks)
     // return res.json(stocks)
-    return res.json(user)
+    return res.json(stocks)
 })
 
 export default router;

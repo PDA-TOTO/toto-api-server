@@ -16,4 +16,7 @@ export default class PORTFOILIO {
 
     @Column({ comment: '포트이름'})
     portName : String;
+
+    @Column({name: 'is_main', type: 'boolean', default: false})
+    isMain: boolean;
 }

@@ -8,7 +8,7 @@ import User from './userEntity';
 export default class PortfolioItems {
 
     @PrimaryGeneratedColumn()
-    Id: Number;
+    id: number;
 
     @ManyToOne(()=>CODE)
     @JoinColumn({name: 'krxCode'})
@@ -19,8 +19,5 @@ export default class PortfolioItems {
     portId: PORTFOILIO;
 
     @Column({ type: 'float', comment: '비중'})
-    weight: Float32Array;
-
-    @Column({ comment: '종목명' })
-    stock: string;
+    weight: number;
 }
