@@ -1,5 +1,8 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import { getCommunityFindByKrxCode } from "../services/community/commuityService";
+import {
+  getCommunityFindByKrxCode,
+  submitVote,
+} from "../services/community/commuityService";
 
 const router: Router = express.Router();
 
@@ -14,7 +17,12 @@ router.get(
 router.post(
   "/:krxCode/vote",
   async (req: Request, res: Response, next: NextFunction) => {
-    res.json("hi");
+    const result = await submitVote(
+      req.params.krxCode,
+      req.body.vote,
+      req.body.first
+    );
+    res.json(result);
   }
 );
 export default router;
