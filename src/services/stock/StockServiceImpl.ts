@@ -7,6 +7,7 @@ import { UserService } from '../user/UserServiceImpl';
 import { Transaction } from '../transaction';
 
 export class StockService implements IStockService {
+    name: string = 'StockService';
     userService: IUserService;
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
@@ -20,6 +21,10 @@ export class StockService implements IStockService {
         this.queryRunner = queryRunner;
         this.stockRepository = queryRunner.manager.getRepository(CODE);
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
+        if (this.queryRunner.root === UserService.name) {
+            return;
+        }
+
         this.userService = new UserService(queryRunner);
     }
 

@@ -8,7 +8,10 @@ import { UserService } from '../services/user/UserServiceImpl';
 import { AppDataSource } from '../dbs/main/dataSource';
 import ApplicationError from '../utils/error/applicationError';
 const router: Router = express.Router();
-const userService: IUserService = new UserService(AppDataSource.createQueryRunner());
+
+let queryRunner = AppDataSource.createQueryRunner();
+queryRunner.root = UserService.name;
+const userService: IUserService = new UserService(queryRunner);
 
 const signUpValidator = [
     body('email')
