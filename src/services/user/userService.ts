@@ -69,6 +69,7 @@ export const emailSignUp = async (email: string, password: string): Promise<Visi
             .getRepository(User)
             .save({ email: email, password: hashedPassword, account: accountOBJ });
 
+        
         return mapToVisibleUser(user);
     } catch (err) {
         await queryRunner.rollbackTransaction();

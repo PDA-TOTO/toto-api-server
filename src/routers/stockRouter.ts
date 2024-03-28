@@ -10,7 +10,7 @@ const router: Router = express.Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const stocks = await showStocks();
-    console.log(stocks);
+    // console.log(stocks);
     res.json(stocks);
 });
 
@@ -71,6 +71,7 @@ const buyMiddlewares = [
     body('price').isNumeric().withMessage('가격은 숫자이어야 합니다.'),
     validateHandler,
 ];
+
 router.post('/:code/buy', buyMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { code } = req.params;
