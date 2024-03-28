@@ -1,14 +1,17 @@
 import { QueryRunner, Repository } from 'typeorm';
 import { AccountResponse, IBalanceService } from './IBalanceService';
 import Account from '../../dbs/main/entities/accountEntity';
-import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
 import User from '../../dbs/main/entities/userEntity';
 import { Transaction } from '../transaction';
+import { IStockService } from '../stock/IStockService';
+import { StockService } from '../stock/StockServiceImpl';
+import ApplicationError from '../../utils/error/applicationError';
 
 export class BalanceService implements IBalanceService {
+    name: string = 'BalanceService';
     accountRepository: Repository<Account>;
-    stockBalanceRepository: Repository<StockBalance>;
     queryRunner: QueryRunner;
+    stockService: IStockService;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -17,7 +20,56 @@ export class BalanceService implements IBalanceService {
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
         this.accountRepository = queryRunner.manager.getRepository(Account);
-        this.stockBalanceRepository = queryRunner.manager.getRepository(StockBalance);
+
+        if (!this.queryRunner.instances) {
+            this.queryRunner.instances = [];
+        }
+
+        this.queryRunner.instances.push(this.name);
+
+        if (this.queryRunner.instances.includes(StockService.constructor.name)) {
+            return;
+        }
+
+        this.stockService = new StockService(queryRunner);
+    }
+
+    @Transaction()
+    async findByAccountId(accountId: number): Promise<Account | null> {
+        return await this.accountRepository.findOne({ where: { id: accountId } });
+    }
+
+    @Transaction()
+    async deposit(accountId: number, amount: number, price: number): Promise<void> {
+        const account = await this.findByAccountId(accountId);
+        if (!account) {
+            throw new ApplicationError(400, '계좌가 존재하지 않음');
+        }
+
+        if (account.amount < amount * price) {
+            throw new ApplicationError(400, '잔고 부족');
+        }
+
+        await this.accountRepository.update(account.id, {
+            amount: () => `amount - ${amount * price}`,
+        });
+    }
+
+    @Transaction()
+    async withdraw(accountId: number, amount: number, price: number): Promise<void> {
+        const account = await this.findByAccountId(accountId);
+        if (!account) {
+            throw new ApplicationError(400, '계좌가 존재하지 않음');
+        }
+
+        await this.accountRepository.update(account.id, {
+            amount: () => `amount + ${amount * price}`,
+        });
+    }
+
+    @Transaction()
+    async findByUserId(userId: number): Promise<Account | null> {
+        return await this.accountRepository.findOne({ where: { user: { id: userId } } });
     }
 
     @Transaction()

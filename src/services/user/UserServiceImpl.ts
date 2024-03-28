@@ -11,6 +11,7 @@ import ApplicationError from '../../utils/error/applicationError';
 dotenv.config();
 
 export class UserService implements IUserService {
+    name: string = 'UserService';
     userRepository: Repository<User>;
     balanceService: IBalanceService;
     queryRunner: QueryRunner;
@@ -20,9 +21,18 @@ export class UserService implements IUserService {
     }
 
     setQueryRunner(queryRunner: QueryRunner): void {
-        this.userRepository = queryRunner.manager.getRepository(User);
-        this.balanceService = new BalanceService(queryRunner);
         this.queryRunner = queryRunner;
+        this.userRepository = queryRunner.manager.getRepository(User);
+
+        if (!this.queryRunner.instances) {
+            this.queryRunner.instances = [];
+        }
+
+        this.queryRunner.instances.push(this.name);
+        if (this.queryRunner.instances.includes(BalanceService.name)) {
+            return;
+        }
+        this.balanceService = new BalanceService(queryRunner);
     }
 
     @Transaction()
