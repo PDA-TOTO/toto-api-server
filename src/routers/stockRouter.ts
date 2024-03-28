@@ -5,7 +5,11 @@ import { toDate } from '../utils/date/toDate';
 import { authenticate } from '../middlewares/authenticate/authenticate';
 import { body } from 'express-validator';
 import validateHandler from '../middlewares/validateHandler/validateHandler';
+import { IStockService } from '../services/stock/IStockService';
+import { StockService } from '../services/stock/StockServiceImpl';
+import { AppDataSource } from '../dbs/main/dataSource';
 
+const stockService: IStockService = new StockService(AppDataSource.createQueryRunner());
 const router: Router = express.Router();
 
 // router.get('/', async (req: Request, res: Response, next: NextFunction) => {
@@ -14,19 +18,19 @@ const router: Router = express.Router();
 //     res.json(stocks);
 // });
 
-// router.get('/:code/finance', async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//         const { code } = req.params;
-//         const result = await getRecentFinance(code);
-//         res.status(200).json({
-//             success: true,
-//             message: '재무재표 가져오기 성공',
-//             result: result,
-//         });
-//     } catch (err) {
-//         next(err);
-//     }
-// });
+router.get('/:code/finance', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { code } = req.params;
+        const result = await stockService.getFinanceByCode(code);
+        res.status(200).json({
+            success: true,
+            message: '재무재표 가져오기 성공',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
 
 // router.get('/:code', async (req: Request, res: Response, next: NextFunction) => {
 //     try {
