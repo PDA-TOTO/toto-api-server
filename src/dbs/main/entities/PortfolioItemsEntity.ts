@@ -14,7 +14,7 @@ export default class PortfolioItems {
 
     @ManyToOne(() => PORTFOILIO)
     @JoinColumn({ name: 'portId' })
-    portId: PORTFOILIO;
+    portfolio: PORTFOILIO;
 
     @Column({ name: 'amount', type: 'bigint', comment: '수량', unsigned: true })
     amount: number;
