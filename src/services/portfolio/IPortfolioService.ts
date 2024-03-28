@@ -27,6 +27,7 @@ export interface IPortfolioService extends IService {
     balanceService: IBalanceService;
     stockService: IStockService;
     findportbyId(portId : number) : Promise<PORTFOILIO>
+    buyStock(portId : number, items : PortfolioItems ) : Promise<PORTFOILIO>;
     getAllPortfolios(userId: number): Promise<PORTFOILIO[]>;
     addPortfolioItem(request: PortfolioItems): Promise<void>;
     minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void>;

@@ -59,4 +59,20 @@ router.delete('/deletePort', authenticate, async(req:Request, res:Response, next
         next(err);
     }
 })
+
+router.post('/buy', authenticate, async(req:Request, res:Response, next: NextFunction)=>{
+    try {
+        const items : PortfolioItems[] = req.body.items
+        const portId : number = req.body.portId
+        console.log(items[0])
+        portfolioService.buyStock(portId,items[0])
+        return res.status(200).json({
+            success: true,
+            message: '포트폴리오 가져오기 성공'
+        })
+        
+    } catch(err) {
+        next(err);
+    }
+})
 export default router;

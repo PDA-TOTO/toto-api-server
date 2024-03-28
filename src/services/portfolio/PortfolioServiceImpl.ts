@@ -49,6 +49,7 @@ export class PortfolioService implements IPortfolioService {
     async findportbyId(portId : number) : Promise<any>{
         return await this.portfolioRepository.findOneBy({id : portId})
     }
+
     @Transaction()
     async getAllPortfolios(userId: number): Promise<PORTFOILIO[]> {
         return this.portfolioRepository.createQueryBuilder('portfolio')
@@ -56,10 +57,31 @@ export class PortfolioService implements IPortfolioService {
         .leftJoinAndSelect('portfolioItems.krxCode', 'CODE')
         .where('portfolio.userId = :userId', {userId: userId})
         .getMany();
-
     }
+    
+    async buyStock(portId : number , items : PortfolioItems ): Promise<any> {
+        items.avg = 0
+        // console.log(await this.findportbyId(portId))
+        console.log(portId, items.krxCode, items.amount)
+        await this.portfolioItemRepository.findOne({where : {id : portId, krxCode : items.krxCode }}).then(result=>{
+            console.log(result) //종목 결과
+            if(!result){ //없는 종목이라면
+                let tempPort : PortfolioItems = items
+                this.findportbyId(portId).then(port=>{
+                    tempPort.portfolio = port
+                    console.log(tempPort)
+                    this.addPortfolioItem(tempPort)
+                })
+            }else{
+                let inputPort= result;
+                this.portfolioItemRepository.update({ portfolio : {id : result!.id}, krxCode : items.krxCode}, { amount : Number(inputPort.amount) + items.amount})
+            }
+        })
+    }
+
     async addPortfolioItem(items : PortfolioItems ): Promise<void> {
         items.avg = 0
+        console.log(items)
         await this.portfolioItemRepository.save(items)
     }
     async minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
@@ -71,7 +93,6 @@ export class PortfolioService implements IPortfolioService {
         return await this.portfolioRepository.save({portName : portName, user : user, isMain : false });     
     }   
     async deletePortfolio(portfolio: PORTFOILIO): Promise<any> {
-        // throw new Error('Method not implemented.');
         await this.portfolioItemRepository.delete({portfolio : portfolio})
         await this.portfolioRepository.delete({id : portfolio.id});     
     }   
