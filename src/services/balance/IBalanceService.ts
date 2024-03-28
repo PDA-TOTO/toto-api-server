@@ -16,6 +16,7 @@ export interface IBalanceService extends IService {
 
     createAccount(user: User): Promise<AccountResponse>;
     findByUserId(userId: number): Promise<Account | null>;
+    findByAccountId(accountId: number): Promise<Account | null>;
     deposit(accountId: number, amount: number, price: number): Promise<void>;
     withdraw(accountId: number, amount: number, price: number): Promise<void>;
 }
