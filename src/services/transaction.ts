@@ -26,7 +26,10 @@ export const Transaction = () => {
                 throw err;
             } finally {
                 await s.queryRunner.release();
-                s.setQueryRunner(AppDataSource.createQueryRunner());
+
+                let queryRunner = AppDataSource.createQueryRunner();
+                queryRunner.root = s.queryRunner.root;
+                s.setQueryRunner(queryRunner);
             }
         };
     };

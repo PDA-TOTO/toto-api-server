@@ -9,6 +9,7 @@ import { StockService } from '../stock/StockServiceImpl';
 import ApplicationError from '../../utils/error/applicationError';
 
 export class BalanceService implements IBalanceService {
+    name: string = 'BalanceService';
     accountRepository: Repository<Account>;
     stockBalanceRepository: Repository<StockBalance>;
     queryRunner: QueryRunner;
@@ -22,6 +23,11 @@ export class BalanceService implements IBalanceService {
         this.queryRunner = queryRunner;
         this.accountRepository = queryRunner.manager.getRepository(Account);
         this.stockBalanceRepository = queryRunner.manager.getRepository(StockBalance);
+
+        if (this.queryRunner.root === StockService.constructor.name) {
+            return;
+        }
+
         this.stockService = new StockService(queryRunner);
     }
 
