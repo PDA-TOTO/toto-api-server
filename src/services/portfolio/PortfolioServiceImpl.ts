@@ -8,7 +8,7 @@ import { AddStockInfoRequest, IPortfolioService, SetPortfolioItemRequest } from 
 import { BalanceService } from '../balance/BalanceServiceImpl';
 import { StockService } from '../stock/StockServiceImpl';
 
-class PortfolioService implements IPortfolioService {
+export class PortfolioService implements IPortfolioService {
     queryRunner: QueryRunner;
     name: string = 'PortfolioService';
     portfolioRepository: Repository<PORTFOILIO>;
