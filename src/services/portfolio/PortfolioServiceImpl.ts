@@ -3,18 +3,23 @@ import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
 import PortfolioItems from '../../dbs/main/entities/PortfolioItemsEntity';
 import User from '../../dbs/main/entities/userEntity';
 import { IBalanceService } from '../balance/IBalanceService';
+import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
 import { AddStockInfoRequest, IPortfolioService, SetPortfolioItemRequest } from './IPortfolioService';
 import { BalanceService } from '../balance/BalanceServiceImpl';
 import { StockService } from '../stock/StockServiceImpl';
+import CODE from '../../dbs/main/entities/codeEntity';
 
 export class PortfolioService implements IPortfolioService {
     queryRunner: QueryRunner;
     name: string = 'PortfolioService';
+
     portfolioRepository: Repository<PORTFOILIO>;
     portfolioItemRepository: Repository<PortfolioItems>;
+
     balanceService: IBalanceService;
     stockService: IStockService;
+    static getAllPortfolios: any; // static property
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -41,17 +46,54 @@ export class PortfolioService implements IPortfolioService {
         }
         this.stockService = new StockService(queryRunner);
     }
-
-    async getAllPortfolios(userId: number): Promise<PORTFOILIO[]> {
-        throw new Error('Method not implemented.');
+    async findportbyId(portId : number) : Promise<any>{
+        return await this.portfolioRepository.findOneBy({id : portId})
     }
-    async addPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
-        throw new Error('Method not implemented.');
+
+    @Transaction()
+    async getAllPortfolios(userId: number): Promise<PORTFOILIO[]> {
+        return this.portfolioRepository.createQueryBuilder('portfolio')
+        .leftJoinAndSelect('portfolio.portfolioItems', 'portfolioItems')
+        .leftJoinAndSelect('portfolioItems.krxCode', 'CODE')
+        .where('portfolio.userId = :userId', {userId: userId})
+        .getMany();
+    }
+    
+    async buyStock(portId : number , items : PortfolioItems ): Promise<any> {
+        items.avg = 0
+        // console.log(await this.findportbyId(portId))
+        console.log(portId, items.krxCode, items.amount)
+        await this.portfolioItemRepository.findOne({where : {id : portId, krxCode : items.krxCode }}).then(result=>{
+            console.log(result) //종목 결과
+            if(!result){ //없는 종목이라면
+                let tempPort : PortfolioItems = items
+                this.findportbyId(portId).then(port=>{
+                    tempPort.portfolio = port
+                    console.log(tempPort)
+                    this.addPortfolioItem(tempPort)
+                })
+            }else{
+                let inputPort= result;
+                this.portfolioItemRepository.update({ portfolio : {id : result!.id}, krxCode : items.krxCode}, { amount : Number(inputPort.amount) + items.amount})
+            }
+        })
+    }
+
+    async addPortfolioItem(items : PortfolioItems ): Promise<void> {
+        items.avg = 0
+        console.log(items)
+        await this.portfolioItemRepository.save(items)
     }
     async minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    async createPortfolio(user: User, portName: string, items?: AddStockInfoRequest[] | undefined): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
+    //리턴형식이 Portfolio인데 오피셜타입이 아니라 객체가 Portfolio인척 흉내내는 애라서 부득이하게 any로 함 일단
+    async createPortfolio(user: User, portName: string, items?: AddStockInfoRequest[] | undefined): Promise<any> {
+        // throw new Error('Method not implemented.');
+        return await this.portfolioRepository.save({portName : portName, user : user, isMain : false });     
+    }   
+    async deletePortfolio(portfolio: PORTFOILIO): Promise<any> {
+        await this.portfolioItemRepository.delete({portfolio : portfolio})
+        await this.portfolioRepository.delete({id : portfolio.id});     
+    }   
 }

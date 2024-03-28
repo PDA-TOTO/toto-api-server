@@ -33,10 +33,10 @@ import CODE from '../../dbs/main/entities/codeEntity';
 // };
 
 // export const createPortfolio = async (user: User, portName: string, items: PortFolioItemITEMS[]) => {
-//이메일을 가지고 있는 USER객체 반환(id, email, passwird, exp 등등)
+// // 이메일을 가지고 있는 USER객체 반환(id, email, passwird, exp 등등)
 // const user:User|null = await userFindByEmail(userEmail);
 // if (!user) throw new ApplicationError(400, '유저가 존재하지 않습니다.');
-//items 안에 stock있으면 그거 이름에 따른 CODE객체들 준다
+// // items 안에 stock있으면 그거 이름에 따른 CODE객체들 준다
 // const codes: CODE[] = await stocksGetAllByCode(items.map((i) => i.code));
 // const ktUser = new User(); //깡동유저라는 뜻
 // ktUser.id = user.id;

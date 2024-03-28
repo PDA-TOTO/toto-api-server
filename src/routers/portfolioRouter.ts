@@ -5,27 +5,74 @@ import User from '../dbs/main/entities/userEntity';
 import PORTFOILIO from '../dbs/main/entities/PortfolioEntity';
 import { authenticate } from '../middlewares/authenticate/authenticate';
 import validateHandler from '../middlewares/validateHandler/validateHandler';
+import { PortfolioService } from '../services/portfolio/PortfolioServiceImpl';
+import { IPortfolioService, SetPortfolioItemRequest } from '../services/portfolio/IPortfolioService';
+import PortfolioItems from '../dbs/main/entities/PortfolioItemsEntity';
+
 const router: Router = express.Router();
 
-// router.post('/create', async(req:Request, res:Response, next: NextFunction)=>{
+const portfolioService: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());
 
-//     // const stocks = await createPortfolio(req.body.data);
-//     console.log(444444,req.body.data)
-//     const data = req.body.data
-//     const stocks = await createPortfolio(data.user, data.portName, data.items);
-//     return res.json({data : "hi"})
-// })
+router.post('/create', authenticate, async(req:Request, res:Response, next: NextFunction)=>{
+    try{
+        await portfolioService.createPortfolio(req.user, req.body.portName).then(async (result:PORTFOILIO)=>{
+            const portId = result.id
+            req.body.items.map(async (elem : PortfolioItems)=>{
+                elem.portfolio = result
+                await portfolioService.addPortfolioItem(elem);
+            })
+        }).then(result=>{
+                res.status(200).json({
+                success: true,
+                message: '포트폴리오 생성 성공',
+                result: result
+            })
+        })
+    } catch(err){
+        next(err)
+    }
+})
+router.get('/getAllPorts', authenticate, async(req:Request, res:Response, next: NextFunction)=>{
+    try {
+        const result = await portfolioService.getAllPortfolios(req.user!.id);
+        return res.status(200).json({
+            success: true,
+            message: '포트폴리오 가져오기 성공',
+            result: result
+        })
+    } catch(err) {
+        next(err);
+    }
+})
+router.delete('/deletePort', authenticate, async(req:Request, res:Response, next: NextFunction)=>{
+    try {
+        
+        const port : PORTFOILIO= await portfolioService.findportbyId(req.body.portId)
+        console.log(port)
+        const result = await portfolioService.deletePortfolio(port)
+        return res.status(200).json({
+            success: true,
+            message: '포트폴리오 가져오기 성공',
+            // result: result
+        })
+    } catch(err) {
+        next(err);
+    }
+})
 
-// router.get('/portNames', authenticate, async(req:Request, res:Response, next: NextFunction)=>{
-//     // console.log(req)
-//     // console.log(req.user)
-//     const user : User = req.user
-//     const userId = req.user?.id;
-//     // console.log(userId)
-//     const stocks : PORTFOILIO[] = await getPortNames(user);
-//     // console.log(stocks)
-//     // return res.json(stocks)
-//     return res.json(stocks)
-// })
-
+router.post('/buy', authenticate, async(req:Request, res:Response, next: NextFunction)=>{
+    try {
+        const items : PortfolioItems[] = req.body.items
+        const portId : number = req.body.portId
+        console.log(items[0])
+        portfolioService.buyStock(portId,items[0])
+        return res.status(200).json({
+            success: true,
+            message: '포트폴리오 가져오기 성공'
+        })
+        
+    } catch(err) {
+        next(err);
+    }
+})
 export default router;

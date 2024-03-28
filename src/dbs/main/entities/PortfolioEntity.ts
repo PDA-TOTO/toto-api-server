@@ -19,4 +19,7 @@ export default class PORTFOILIO {
 
     @Column({name: 'is_main', type: 'boolean', default: false})
     isMain: boolean;
+
+    @OneToMany(() => PortfolioItems, (portfolioItems) => portfolioItems.portfolio)
+    portfolioItems: PortfolioItems[];
 }
