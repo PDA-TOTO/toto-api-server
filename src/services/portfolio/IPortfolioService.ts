@@ -4,7 +4,6 @@ import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
 import PortfolioItems from '../../dbs/main/entities/PortfolioItemsEntity';
 import CODE from '../../dbs/main/entities/codeEntity';
 import User from '../../dbs/main/entities/userEntity';
-import { Account } from '../user/userServiceReturnType';
 import { IBalanceService } from '../balance/IBalanceService';
 import { IStockService } from '../stock/IStockService';
 

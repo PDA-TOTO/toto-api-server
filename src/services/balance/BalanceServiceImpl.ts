@@ -29,12 +29,12 @@ export class BalanceService implements IBalanceService {
     }
 
     @Transaction()
-    deposit(accountId: number, amount: number): Promise<void> {
+    async deposit(accountId: number, amount: number, price: number): Promise<void> {
         throw new Error('Method not implemented.');
     }
 
     @Transaction()
-    withdraw(accountId: number, amount: number): Promise<void> {
+    async withdraw(accountId: number, amount: number, price: number): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

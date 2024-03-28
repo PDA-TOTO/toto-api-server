@@ -36,16 +36,16 @@ class PortfolioService implements IPortfolioService {
         this.stockService = new StockService(queryRunner);
     }
 
-    getAllPortfolios(userId: number): Promise<PORTFOILIO[]> {
+    async getAllPortfolios(userId: number): Promise<PORTFOILIO[]> {
         throw new Error('Method not implemented.');
     }
-    addPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
+    async addPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
+    async minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    createPortfolio(user: User, portName: string, items?: AddStockInfoRequest[] | undefined): Promise<void> {
+    async createPortfolio(user: User, portName: string, items?: AddStockInfoRequest[] | undefined): Promise<void> {
         throw new Error('Method not implemented.');
     }
 }
