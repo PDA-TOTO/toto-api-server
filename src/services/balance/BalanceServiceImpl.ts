@@ -1,7 +1,6 @@
 import { QueryRunner, Repository } from 'typeorm';
 import { AccountResponse, IBalanceService } from './IBalanceService';
 import Account from '../../dbs/main/entities/accountEntity';
-import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
 import User from '../../dbs/main/entities/userEntity';
 import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
@@ -11,7 +10,6 @@ import ApplicationError from '../../utils/error/applicationError';
 export class BalanceService implements IBalanceService {
     name: string = 'BalanceService';
     accountRepository: Repository<Account>;
-    stockBalanceRepository: Repository<StockBalance>;
     queryRunner: QueryRunner;
     stockService: IStockService;
 
@@ -22,7 +20,6 @@ export class BalanceService implements IBalanceService {
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
         this.accountRepository = queryRunner.manager.getRepository(Account);
-        this.stockBalanceRepository = queryRunner.manager.getRepository(StockBalance);
 
         if (this.queryRunner.root === StockService.constructor.name) {
             return;
@@ -32,22 +29,18 @@ export class BalanceService implements IBalanceService {
     }
 
     @Transaction()
+    async deposit(accountId: number, amount: number, price: number): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    @Transaction()
+    async withdraw(accountId: number, amount: number, price: number): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    @Transaction()
     async findByUserId(userId: number): Promise<Account | null> {
         return await this.accountRepository.findOne({ where: { user: { id: userId } } });
-    }
-
-    @Transaction()
-    async buyStock(userId: number, code: string, price: number, amount: number): Promise<void> {
-        const account = await this.findByUserId(userId);
-
-        if (!account) {
-            throw new ApplicationError(400, '해당 유저의 계좌가 존재하지 않음');
-        }
-    }
-
-    @Transaction()
-    cellStock(userId: number, code: string, price: number, amount: number): Promise<void> {
-        throw new Error('Method not implemented.');
     }
 
     @Transaction()
