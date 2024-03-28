@@ -1,6 +1,5 @@
 import { AppDataSource } from '../../dbs/main/dataSource';
 import CODE from '../../dbs/main/entities/codeEntity';
-import dotenv from 'dotenv';
 import Finance from '../../dbs/main/entities/financeEntity';
 import ApplicationError from '../../utils/error/applicationError';
 import Price from '../../dbs/main/entities/priceEntity';
@@ -9,12 +8,10 @@ import { userFindByEmail } from '../user/userService';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import Account from '../../dbs/main/entities/accountEntity';
 import { StockBalance } from '../../dbs/main/entities/stockBalanceEntity';
-dotenv.config();
-
 const stockRepository = AppDataSource.getRepository(CODE);
 const financeRepository = AppDataSource.getRepository(Finance);
 const priceRepository = AppDataSource.getRepository(Price);
-const transactionRepository = AppDataSource.getRepository(StockTransaction);
+const stockBalanaceRepository = AppDataSource.getRepository(StockBalance);
 
 const stockFindByCode = async (code: string) => {
     return await stockRepository.findOneBy({ krxCode: code });
@@ -261,6 +258,72 @@ export const buyStock = async (code: string, userEmail: string, amount: number, 
     } catch (err) {
         await queryRunner.rollbackTransaction();
         throw new ApplicationError(500, '저장되지 않음');
+    } finally {
+        await queryRunner.release();
+    }
+};
+
+export const cellStock = async (code: string, userEmail: string, amount: number, price: number) => {
+    const user = await userFindByEmail(userEmail);
+    if (!user) {
+        throw new ApplicationError(400, 'No user');
+    }
+
+    const stockCode: CODE | null = await stockFindByCode(code);
+    if (!stockCode) throw new ApplicationError(400, '해당 code와 매핑되는 종목이 존재하지 않음');
+
+    const stockBalanace = await stockBalanaceRepository.findOne({
+        where: { account: { id: user.account.id }, code: { krxCode: stockCode.krxCode } },
+    });
+
+    if (!stockBalanace || stockBalanace!.amount < amount) {
+        console.log('부족');
+        throw new ApplicationError(400, '잔고부족');
+    }
+
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+        // 거래 기록 생성
+        const stockTransaction = await queryRunner.manager.getRepository(StockTransaction).save({
+            user: user,
+            code: stockCode,
+            amount: amount,
+            price: price,
+        });
+
+        // 주식 잔고 처리
+        if (stockBalanace!.amount === amount) {
+            await queryRunner.manager.getRepository(StockBalance).remove(stockBalanace!);
+        } else {
+            await queryRunner.manager.getRepository(StockBalance).update(stockBalanace!.id, {
+                amount: () => `amount - ${amount}`,
+            });
+            stockBalanace!.amount -= amount;
+        }
+
+        // 내 잔고 처리
+        await queryRunner.manager.getRepository(Account).update(user.account.id, {
+            amount: () => `amount + ${amount * price}`,
+        });
+        user.account.amount += amount * price;
+
+        await queryRunner.commitTransaction();
+        return {
+            user: {
+                email: userEmail,
+                account: user.account,
+            },
+            amount: amount,
+            price: stockBalanace?.avg,
+            code: stockCode,
+            date: stockTransaction.createdAt,
+        };
+    } catch (err) {
+        await queryRunner.rollbackTransaction();
+        throw new ApplicationError(500, 'Rollback');
     } finally {
         await queryRunner.release();
     }

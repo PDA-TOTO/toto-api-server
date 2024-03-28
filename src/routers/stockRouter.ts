@@ -1,5 +1,11 @@
 import express, { Router, Request, Response, NextFunction } from 'express';
-import { buyStock, getRecentFinance, getStockInfoWithChart, showStocks } from '../services/stock/stockService';
+import {
+    buyStock,
+    cellStock,
+    getRecentFinance,
+    getStockInfoWithChart,
+    showStocks,
+} from '../services/stock/stockService';
 import axios from 'axios';
 import { toDate } from '../utils/date/toDate';
 import { authenticate } from '../middlewares/authenticate/authenticate';
@@ -65,14 +71,13 @@ router.get('/majors', async (req: Request, res: Response, next: NextFunction) =>
 
 // 매수
 // 유저, 수량, 체결가, 종목코드
-const buyMiddlewares = [
+const stockTransactionMiddlewares = [
     authenticate,
     body('amount').isNumeric().withMessage('수량은 숫자이어야 합니다.'),
     body('price').isNumeric().withMessage('가격은 숫자이어야 합니다.'),
     validateHandler,
 ];
-
-router.post('/:code/buy', buyMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:code/buy', stockTransactionMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { code } = req.params;
 
@@ -82,6 +87,23 @@ router.post('/:code/buy', buyMiddlewares, async (req: Request, res: Response, ne
         res.status(201).json({
             success: true,
             message: '매수 완료',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// 매도
+router.post('/:code/cell', stockTransactionMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { code } = req.params;
+        const { amount, price } = req.body;
+        const result = await cellStock(code, req.user!.email, amount, price);
+
+        res.status(201).json({
+            success: true,
+            message: '매도 완료',
             result: result,
         });
     } catch (err) {

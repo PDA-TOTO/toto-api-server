@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import "reflect-metadata";
 import express, { Express, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
@@ -13,6 +14,21 @@ import ApplicationError from "./utils/error/applicationError";
 import cookieParser = require("cookie-parser");
 
 dotenv.config();
+=======
+import 'reflect-metadata';
+import express, { Express, NextFunction, Request, Response } from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import { AppDataSource } from './dbs/main/dataSource';
+import errorHandler from './middlewares/errorHandler/errorHandler';
+import userRouter from './routers/userRouter';
+import communityRouter from './routers/communityRouter';
+import ApplicationError from './utils/error/applicationError';
+import cookieParser = require('cookie-parser');
+
+dotenv.config();
+import stockRouter from './routers/stockRouter';
+>>>>>>> 4b84b8efe3d884ae303d1d1fbd6f317accc63024
 import { VisibleUser } from './services/user/userServiceReturnType';
 
 const app: Express = express();
@@ -26,11 +42,11 @@ declare global {
 }
 
 // Main DB Connection
-AppDataSource.initialize().then(() => console.log("Main DB Connected!"));
+AppDataSource.initialize().then(() => console.log('Main DB Connected!'));
 
 const SERVER_PORT = process.env.SERVER_PORT;
 app.listen(SERVER_PORT, () => {
-  console.log(`Server Start: Listening Port on ${SERVER_PORT}`);
+    console.log(`Server Start: Listening Port on ${SERVER_PORT}`);
 });
 
 app.use(cookieParser());
@@ -44,12 +60,17 @@ app.use(
 );
 
 app.use('/api/users', userRouter);
+<<<<<<< HEAD
 app.use('/api/portfolios', portfolioRouter);
 app.use("/api/stocks", stockRouter);
 app.use("/api/community", communityRouter);
+=======
+app.use('/api/stocks', stockRouter);
+app.use('/api/community', communityRouter);
+>>>>>>> 4b84b8efe3d884ae303d1d1fbd6f317accc63024
 
-app.all("*", (req: Request, res: Response, next: NextFunction) => {
-  next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));
+app.all('*', (req: Request, res: Response, next: NextFunction) => {
+    next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));
 });
 
 app.use(errorHandler);
