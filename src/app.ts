@@ -11,6 +11,7 @@ import cookieParser = require('cookie-parser');
 
 dotenv.config();
 import stockRouter from './routers/stockRouter';
+import portfolioRouter from "./routers/portfolioRouter"
 import { VisibleUser } from './services/user/userServiceReturnType';
 
 const app: Express = express();
@@ -42,8 +43,9 @@ app.use(
 );
 
 app.use('/api/users', userRouter);
-app.use('/api/stocks', stockRouter);
-app.use('/api/community', communityRouter);
+app.use('/api/portfolios', portfolioRouter);
+app.use("/api/stocks", stockRouter);
+app.use("/api/community", communityRouter);
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));

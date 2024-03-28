@@ -31,6 +31,10 @@ export const userIsExistByEmail = async (email: string): Promise<boolean> => {
     return await userRepository.existsBy({ email: email });
 };
 
+export const userFindById = async (userId: number): Promise<User | null> => {
+    return await userRepository.findOne({where: {id : userId}});
+}
+
 const mapToVisibleUser = (user: User): VisibleUser => {
     return {
         id: user.id,
@@ -65,6 +69,7 @@ export const emailSignUp = async (email: string, password: string): Promise<Visi
             .getRepository(User)
             .save({ email: email, password: hashedPassword, account: accountOBJ });
 
+        
         return mapToVisibleUser(user);
     } catch (err) {
         await queryRunner.rollbackTransaction();
