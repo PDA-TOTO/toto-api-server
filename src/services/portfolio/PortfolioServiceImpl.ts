@@ -41,7 +41,7 @@ export class PortfolioService implements IPortfolioService {
 
     @Transaction()
     async findPortById(portId: number): Promise<PORTFOILIO | null> {
-        return await this.portfolioRepository.findOneBy({ id: portId });
+        return await this.portfolioRepository.findOne({ where: { id: portId }, relations: { user: true } });
     }
 
     @Transaction()
@@ -64,11 +64,22 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
-    async addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
+    async getPortfolioByIdAndOwner(portId: number, userId: number): Promise<PORTFOILIO> {
         const portfolio = await this.findPortById(portId);
         if (!portfolio) {
             throw new ApplicationError(400, '포트폴리오 번호가 존재하지 않음');
         }
+
+        if (portfolio.user.id !== userId) {
+            throw new ApplicationError(400, '포트폴리오 주인이 아닙니다.');
+        }
+
+        return portfolio;
+    }
+
+    @Transaction()
+    async addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
+        const portfolio = await this.getPortfolioByIdAndOwner(portId, userId);
 
         let insertItems: PortfolioItems[] = [];
         for (const item of items) {
@@ -106,8 +117,38 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
-    async minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
-        throw new Error('Method not implemented.');
+    async minusPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
+        const portfolio = await this.getPortfolioByIdAndOwner(portId, userId);
+
+        let deleteItemIds: number[] = [];
+        for (const item of items) {
+            const portfolioItem = await this.findPortItemByCodeAndPort(portId, item.krxCode);
+            if (!portfolioItem) throw new ApplicationError(400, '해당 주식은 포트폴리오 내에 존재하지 않습니다.');
+            if (portfolioItem.amount < item.amount) {
+                throw new ApplicationError(400, '보유 주식보다 더 많이 팔 수 없습니다.');
+            }
+
+            if (portfolioItem.amount === item.amount) {
+                deleteItemIds.push(portfolioItem.id);
+                continue;
+            }
+
+            await this.portfolioItemRepository.update(portfolioItem.id, {
+                amount: () => `amount - ${item.amount}`,
+            });
+        }
+
+        if (deleteItemIds.length > 0) await this.portfolioItemRepository.delete(deleteItemIds);
+
+        await this.balanceService.depositByUserId(
+            userId,
+            items.reduce((acc, cur) => acc + cur.amount * cur.price, 0)
+        );
+        await this.stockService.createLog({
+            stock: items,
+            portId: portId,
+            transactionType: TransactionType.CELL,
+        });
     }
 
     @Transaction()
