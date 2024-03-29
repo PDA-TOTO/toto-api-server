@@ -9,6 +9,7 @@ import { AppDataSource } from '../dbs/main/dataSource';
 import ApplicationError from '../utils/error/applicationError';
 const router: Router = express.Router();
 
+console.log('---- start user ----');
 const userService: IUserService = new UserService(AppDataSource.createQueryRunner());
 
 const signUpValidator = [

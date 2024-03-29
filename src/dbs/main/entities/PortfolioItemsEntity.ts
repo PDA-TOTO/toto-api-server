@@ -21,5 +21,4 @@ export default class PortfolioItems {
 
     @Column({ name: 'avg', type: 'float', comment: '매수 평균가', unsigned: true })
     avg: number;
-    tempPort: { id: number; };
 }

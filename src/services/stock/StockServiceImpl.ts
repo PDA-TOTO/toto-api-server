@@ -1,17 +1,28 @@
-import { Repository, QueryRunner } from 'typeorm';
+import { Repository, QueryRunner, In } from 'typeorm';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
-import { CreateStockTransactionLogRequest, FinanceResponse, IStockService, StockChartResponse } from './IStockService';
+import {
+    CreateStockTransactionLogRequest,
+    FinanceResponse,
+    GetStockTransactionsResponse,
+    IStockService,
+    StockChartResponse,
+} from './IStockService';
 import { IUserService } from '../user/IUserService';
-import { UserService } from '../user/UserServiceImpl';
 import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
+import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
+import { UserService } from '../user/UserServiceImpl';
+import { createService } from '../serviceCreator';
+import { IPortfolioService } from '../portfolio/IPortfolioService';
+import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
 
 export class StockService implements IStockService {
-    name: string = 'StockService';
     userService: IUserService;
+    portfolioService: IPortfolioService;
+    name: string = 'StockService';
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
     financeRepository: Repository<Finance>;
@@ -21,9 +32,6 @@ export class StockService implements IStockService {
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
     }
-    getFinance(code: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
 
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
@@ -31,18 +39,8 @@ export class StockService implements IStockService {
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
         this.financeRepository = queryRunner.manager.getRepository(Finance);
         this.priceRepository = queryRunner.manager.getRepository(Price);
-
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
-        }
-
-        this.queryRunner.instances.push(this.name);
-
-        if (this.queryRunner.instances.includes(UserService.name)) {
-            return;
-        }
-
-        this.userService = new UserService(queryRunner);
+        this.userService = createService(queryRunner, UserService.name, this, this.name) as IUserService;
+        this.portfolioService = createService(queryRunner, PortfolioService.name, this, this.name) as IPortfolioService;
     }
 
     @Transaction()
@@ -57,13 +55,24 @@ export class StockService implements IStockService {
 
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
-        await this.stockTransactionRepository.save({
-            price: request.price,
-            amount: request.amount,
-            transactionType: request.transactionType,
-            code: request.code,
-            account: request.account,
+        const stockTransactions: StockTransaction[] = request.stock.map((s) => {
+            const stockTransaction = new StockTransaction();
+            stockTransaction.amount = s.amount;
+            stockTransaction.price = s.price;
+            stockTransaction.transactionType = request.transactionType;
+
+            const port = new PORTFOILIO();
+            port.id = request.portId;
+            stockTransaction.portfolio = port;
+
+            const code = new CODE();
+            code.krxCode = s.krxCode;
+            stockTransaction.code = code;
+
+            return stockTransaction;
         });
+
+        await this.stockTransactionRepository.insert(stockTransactions);
     }
 
     @Transaction()
@@ -86,6 +95,42 @@ export class StockService implements IStockService {
 
         if (!recentPrice) throw new ApplicationError(500, 'PRICE NULL');
         return this.toFinanceResponse(recentPrice.ePr, finances);
+    }
+
+    @Transaction()
+    async findStockTransactionByUserId(
+        userId: number,
+        size?: number,
+        page?: number
+    ): Promise<GetStockTransactionsResponse> {
+        if (!size) size = 7;
+        if (!page) page = 1;
+
+        const portfolios = await this.portfolioService.getAllPortfolios(userId);
+
+        const [stockTransactions, total] = await this.stockTransactionRepository.findAndCount({
+            where: {
+                portfolio: {
+                    id: In(portfolios.map((p) => p.id)),
+                },
+            },
+            relations: {
+                code: true,
+            },
+            take: size,
+            skip: (page - 1) * size,
+            order: {
+                createdAt: 'DESC',
+            },
+        });
+
+        return {
+            total: total,
+            size: size,
+            page: page,
+            lastPage: Math.ceil(total / size),
+            data: stockTransactions,
+        };
     }
 
     @Transaction()
