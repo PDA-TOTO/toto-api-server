@@ -3,41 +3,44 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
+  OneToOne,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import User from "./userEntity";
+import { Vote } from "./voteEntity";
 import Community from "./communityEntity";
+import User from "./userEntity";
+import Comment from "./commentEntity";
 
-export enum VoteType {
+export enum LikeType {
   NONE = "NONE",
   LIKE = "LIKE",
-  UNLINK = "UNLIKE",
+  UNLIKE = "UNLIKE",
 }
 
 @Entity()
-export class Vote {
+export default class Like {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Community, { cascade: true })
-  @JoinColumn({ name: "community_id" })
-  community: Community;
+  @ManyToOne(() => Comment, { cascade: true })
+  @JoinColumn({ name: "comment_id" })
+  comment: Comment;
 
-  // 투표한 user
   @ManyToOne(() => User, { cascade: true })
   @JoinColumn({ name: "user_id" })
   user: User;
 
   @Column({
-    name: "vote_type",
+    name: "like_type",
     type: "enum",
-    enum: VoteType,
-    default: VoteType.NONE,
-    comment: "투표 타입",
+    enum: LikeType,
+    default: LikeType.NONE,
+    comment: "좋아요 타입",
   })
-  voteType: VoteType;
+  likeType: LikeType;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
