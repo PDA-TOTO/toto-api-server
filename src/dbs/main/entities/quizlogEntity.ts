@@ -1,9 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import Quiz from './quizEntity';
+import User from './userEntity';
 
 // nullable default is false
 @Entity()
-export default class User {
+export default class Quizlog {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -15,6 +16,4 @@ export default class User {
     @JoinColumn()
     userid: User;
 
-    @CreateDateColumn({ comment: '풀이 날짜' })
-    createdat: Date;
 }

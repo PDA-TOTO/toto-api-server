@@ -110,6 +110,8 @@ router.get('/my-info', authenticate, async (req: Request, res: Response, next: N
                 id: user.id,
                 email: user.email,
                 account: user.account,
+                tendency: user.tendency,
+                experience : user.experience
             },
         });
     } catch (err) {

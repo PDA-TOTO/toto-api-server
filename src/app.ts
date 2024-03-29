@@ -4,14 +4,17 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { AppDataSource } from './dbs/main/dataSource';
 import errorHandler from './middlewares/errorHandler/errorHandler';
-import userRouter from './routers/userRouter';
-import communityRouter from './routers/communityRouter';
 import ApplicationError from './utils/error/applicationError';
 import cookieParser = require('cookie-parser');
 
 dotenv.config();
+
+import userRouter from './routers/userRouter';
 import stockRouter from './routers/stockRouter';
 import portfolioRouter from './routers/portfolioRouter';
+import communityRouter from './routers/communityRouter';
+import quizRouter from './routers/quizRouter';
+
 import { VisibleUser } from './services/user/userServiceReturnType';
 
 const app: Express = express();
@@ -52,6 +55,7 @@ app.use('/api/users', userRouter);
 app.use('/api/portfolios', portfolioRouter);
 app.use('/api/stocks', stockRouter);
 app.use('/api/community', communityRouter);
+app.use('/api/quiz', quizRouter);
 
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new ApplicationError(404, `Can't find ${req.originalUrl} on server`));
