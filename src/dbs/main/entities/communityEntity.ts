@@ -19,7 +19,7 @@ export default class Community {
   @JoinColumn({ name: "code" })
   code: CODE;
 
-  @Column({ type: "varchar", length: 100, comment: "투표 주제" })
+  @Column({ type: "varchar", length: 100, comment: "투표 주제", default: "" })
   voteTitle: string;
 
   @Column({ type: "date", comment: "투표 시작 날짜" })

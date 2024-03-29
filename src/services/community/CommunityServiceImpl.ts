@@ -6,10 +6,12 @@ import { Transaction } from "../transaction";
 import { IStockService } from "../stock/IStockService";
 import { StockService } from "../stock/StockServiceImpl";
 import ApplicationError from "../../utils/error/applicationError";
+import User from "../../dbs/main/entities/userEntity";
 
 export class CommunityService implements ICommunityService {
   communityRepository: Repository<Community>;
   voteRepository: Repository<Vote>;
+  userRepository: Repository<User>;
   stockService: IStockService;
   queryRunner: QueryRunner;
   name: string = "CommunityService";
@@ -22,6 +24,7 @@ export class CommunityService implements ICommunityService {
     this.queryRunner = queryRunner;
     this.communityRepository = queryRunner.manager.getRepository(Community);
     this.voteRepository = queryRunner.manager.getRepository(Vote);
+    this.userRepository = queryRunner.manager.getRepository(User);
 
     if (!this.queryRunner.instances) {
       this.queryRunner.instances = [];
@@ -48,7 +51,7 @@ export class CommunityService implements ICommunityService {
 
     const community: Community | null = await this.communityRepository.findOne({
       where: { code: { krxCode: stockCode.krxCode } },
-      relations: { votes: true },
+      relations: ["votes", "votes.user", "votes.community"],
     });
 
     if (!community) {
@@ -88,6 +91,35 @@ export class CommunityService implements ICommunityService {
     communityId: number,
     voteType: VoteType
   ): Promise<void> {
-    throw new Error("Method not implemented.");
+    const user: User | null = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    const community: Community | null = await this.communityRepository.findOne({
+      where: { id: communityId },
+    });
+    const vote = await this.voteRepository.findOne({
+      where: { community: { id: communityId }, user: { id: userId } },
+    });
+
+    if (!vote && community && user) {
+      const newVote: Vote = new Vote();
+      newVote.community = community;
+      newVote.user = user;
+      newVote.voteType = voteType;
+      try {
+        await this.voteRepository.save(newVote);
+      } catch (error) {
+        console.error("Error saving vote1:", error);
+      }
+    } else if (vote && community && user) {
+      try {
+        await this.voteRepository.update(
+          { community: { id: communityId }, user: { id: userId } },
+          { voteType: voteType }
+        );
+      } catch (error) {
+        console.error("Error saving vote2:", error);
+      }
+    }
   }
 }

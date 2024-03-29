@@ -3,6 +3,7 @@ import Community from "../../dbs/main/entities/communityEntity";
 import { IService } from "../IService";
 import { Vote, VoteType } from "../../dbs/main/entities/voteEntity";
 import { IStockService } from "../stock/IStockService";
+import User from "../../dbs/main/entities/userEntity";
 
 export type CommunityResponse = {
   id: number;
@@ -19,6 +20,7 @@ export type CommunityResponse = {
 export interface ICommunityService extends IService {
   communityRepository: Repository<Community>;
   voteRepository: Repository<Vote>;
+  userRepository: Repository<User>;
   stockService: IStockService;
 
   communityfindByCode(
