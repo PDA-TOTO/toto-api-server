@@ -1,8 +1,8 @@
-import { DataSource } from 'typeorm';
-import dotenv from 'dotenv';
+import { DataSource } from "typeorm";
+import dotenv from "dotenv";
 dotenv.config();
 
-const isProd: boolean = process.env.NODE_ENV === 'PROD';
+const isProd: boolean = process.env.NODE_ENV === "PROD";
 
 export const AppDataSource = new DataSource({
     type: 'mysql',
