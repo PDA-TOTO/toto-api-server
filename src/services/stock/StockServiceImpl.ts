@@ -1,7 +1,7 @@
 import { Repository, QueryRunner } from 'typeorm';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
-import { CreateStockTransactionLogRequest, FinanceResponse, IStockService } from './IStockService';
+import { CreateStockTransactionLogRequest, FinanceResponse, IStockService, StockChartResponse } from './IStockService';
 import { IUserService } from '../user/IUserService';
 import { UserService } from '../user/UserServiceImpl';
 import { Transaction } from '../transaction';
@@ -86,6 +86,69 @@ export class StockService implements IStockService {
 
         if (!recentPrice) throw new ApplicationError(500, 'PRICE NULL');
         return this.toFinanceResponse(recentPrice.ePr, finances);
+    }
+
+    @Transaction()
+    async getInfoWithChart(
+        code: string,
+        after: Date | null,
+        bundleUnit?: 'DAY' | 'MONTH' | 'YEAR' | undefined
+    ): Promise<StockChartResponse> {
+        const stockCode = await this.findByCode(code);
+        if (!stockCode) throw new ApplicationError(400, '해당 주식이 존재하지 않음');
+
+        // 2달 전이 default
+        if (!after) {
+            after = new Date();
+            after.setMonth(after.getMonth() - 2);
+        }
+
+        if (!bundleUnit) {
+            bundleUnit = 'DAY';
+        }
+
+        let response: StockChartResponse = {
+            chartLength: 0,
+            chart: [],
+            code: stockCode.krxCode,
+            name: stockCode.name,
+            bundleUnit: bundleUnit,
+        };
+
+        if (bundleUnit === 'YEAR') {
+            const stockCharts = await this.priceRepository
+                .createQueryBuilder('price')
+                .select(`DATE_FORMAT(price.date, '%Y') as year, ceiling(avg(price.ePr)) as epr`)
+                .where('code = :code', { code: code })
+                .andWhere('date between :prev and now()', { prev: after })
+                .orderBy('year', 'DESC')
+                .groupBy(`DATE_FORMAT(price.date, '%Y')`)
+                .getRawMany();
+
+            return { ...response, chartLength: stockCharts.length, chart: stockCharts };
+        }
+
+        if (bundleUnit === 'MONTH') {
+            const stockCharts = await this.priceRepository
+                .createQueryBuilder('price')
+                .select(`DATE_FORMAT(price.date, '%Y-%m') as yymm, ceiling(avg(price.ePr)) as epr`)
+                .where('code = :code', { code: code })
+                .andWhere('date between :prev and now()', { prev: after })
+                .orderBy('yymm', 'DESC')
+                .groupBy(`DATE_FORMAT(price.date, '%Y-%m')`)
+                .getRawMany();
+
+            return { ...response, chartLength: stockCharts.length, chart: stockCharts };
+        }
+
+        const stockCharts = await this.priceRepository
+            .createQueryBuilder('price')
+            .where('code = :code', { code: code })
+            .andWhere('date between :prev and now()', { prev: after })
+            .orderBy('price.date', 'DESC')
+            .getRawMany();
+
+        return { ...response, chartLength: stockCharts.length, chart: stockCharts };
     }
 
     toFinanceResponse(price: number, finances: Finance[]): FinanceResponse {
