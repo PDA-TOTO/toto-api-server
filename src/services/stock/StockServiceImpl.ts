@@ -56,7 +56,14 @@ export class StockService implements IStockService {
             },
         });
     }
-
+    async showStocks() : Promise<any>{
+        return this.stockRepository.find();
+    }
+        //     // hashing
+        //     const user = await stockRepository.find();
+        //     return user;
+        // };
+        
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
         const stockTransactions: StockTransaction[] = request.stock.map((s) => {

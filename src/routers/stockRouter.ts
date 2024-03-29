@@ -14,11 +14,11 @@ console.log('---- start stock ----');
 const stockService: IStockService = new StockService(AppDataSource.createQueryRunner());
 const router: Router = express.Router();
 
-// router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-//     const stocks = await showStocks();
-//     // console.log(stocks);
-//     res.json(stocks);
-// });
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    const stocks = await stockService.showStocks();
+    // console.log(stocks);
+    res.json(stocks);
+});
 
 // 코스피, 코스닥 가져오기
 router.get('/index/majors', async (req: Request, res: Response, next: NextFunction) => {

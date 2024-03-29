@@ -88,6 +88,7 @@ export interface IStockService extends IService {
     userService: IUserService;
     portfolioService: IPortfolioService;
 
+    showStocks() : Promise<any>;
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
     getFinanceByCode(code: string): Promise<FinanceResponse>;
