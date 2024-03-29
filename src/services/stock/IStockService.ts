@@ -40,6 +40,14 @@ export type FinanceResponse = {
     netincomeRate: number;
 };
 
+export type StockChartResponse = {
+    chartLength: number;
+    chart: any[];
+    code: string;
+    name: string;
+    bundleUnit: string;
+};
+
 export interface IStockService extends IService {
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
@@ -51,4 +59,9 @@ export interface IStockService extends IService {
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
     getFinanceByCode(code: string): Promise<FinanceResponse>;
+    getInfoWithChart(
+        code: string,
+        after: Date | null,
+        bundleUnit?: 'DAY' | 'MONTH' | 'YEAR' | undefined
+    ): Promise<StockChartResponse>;
 }

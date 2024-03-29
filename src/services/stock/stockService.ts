@@ -1,12 +1,7 @@
 import { AppDataSource } from '../../dbs/main/dataSource';
 import CODE from '../../dbs/main/entities/codeEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
-import ApplicationError from '../../utils/error/applicationError';
 import Price from '../../dbs/main/entities/priceEntity';
-import { In } from 'typeorm';
-import { userFindByEmail } from '../user/userService';
-import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
-import Account from '../../dbs/main/entities/accountEntity';
 const stockRepository = AppDataSource.getRepository(CODE);
 const financeRepository = AppDataSource.getRepository(Finance);
 const priceRepository = AppDataSource.getRepository(Price);
