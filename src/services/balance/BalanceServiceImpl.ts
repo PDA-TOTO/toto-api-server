@@ -6,6 +6,7 @@ import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
 import { StockService } from '../stock/StockServiceImpl';
 import ApplicationError from '../../utils/error/applicationError';
+import { IService } from '../IService';
 
 export class BalanceService implements IBalanceService {
     name: string = 'BalanceService';
@@ -22,16 +23,19 @@ export class BalanceService implements IBalanceService {
         this.accountRepository = queryRunner.manager.getRepository(Account);
 
         if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
+            this.queryRunner.instances = new Map<string, IService>();
         }
 
-        this.queryRunner.instances.push(this.name);
-
-        if (this.queryRunner.instances.includes(StockService.constructor.name)) {
-            return;
+        if (!this.queryRunner.instances.has(this.name)) {
+            this.queryRunner.instances.set(this.name, this);
         }
 
-        this.stockService = new StockService(queryRunner);
+        if (!this.queryRunner.instances.has(StockService.name)) {
+            this.stockService = new StockService(this.queryRunner);
+            this.queryRunner.instances.set(StockService.name, this.stockService);
+        } else {
+            this.stockService = this.queryRunner.instances.get(StockService.name) as IStockService;
+        }
     }
 
     @Transaction()

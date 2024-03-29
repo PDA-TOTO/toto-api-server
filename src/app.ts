@@ -13,6 +13,7 @@ dotenv.config();
 import stockRouter from './routers/stockRouter';
 import portfolioRouter from './routers/portfolioRouter';
 import { VisibleUser } from './services/user/userServiceReturnType';
+import { IService } from './services/IService';
 
 const app: Express = express();
 
@@ -26,7 +27,7 @@ declare global {
 
 declare module 'typeorm' {
     interface QueryRunner {
-        instances: string[];
+        instances: Map<string, IService>;
     }
 }
 

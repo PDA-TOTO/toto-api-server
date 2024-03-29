@@ -12,6 +12,7 @@ import { IUserService } from '../user/IUserService';
 import { UserService } from '../user/UserServiceImpl';
 import ApplicationError from '../../utils/error/applicationError';
 import { TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
+import { IService } from '../IService';
 
 export class PortfolioService implements IPortfolioService {
     queryRunner: QueryRunner;
@@ -35,26 +36,33 @@ export class PortfolioService implements IPortfolioService {
         this.portfolioItemRepository = queryRunner.manager.getRepository(PortfolioItems);
 
         if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
+            this.queryRunner.instances = new Map<string, IService>();
         }
 
-        this.queryRunner.instances.push(this.name);
-
-        if (this.queryRunner.instances.includes(BalanceService.name)) {
-            return;
+        if (!this.queryRunner.instances.has(this.name)) {
+            this.queryRunner.instances.set(this.name, this);
         }
-        this.balanceService = new BalanceService(queryRunner);
 
-        if (this.queryRunner.instances.includes(StockService.name)) {
-            console.log('yes');
-            return;
+        if (!this.queryRunner.instances.has(BalanceService.name)) {
+            this.balanceService = new BalanceService(queryRunner);
+            this.queryRunner.instances.set(BalanceService.name, this.balanceService);
+        } else {
+            this.balanceService = this.queryRunner.instances.get(BalanceService.name) as IBalanceService;
         }
-        this.stockService = new StockService(queryRunner);
 
-        if (this.queryRunner.instances.includes(UserService.name)) {
-            return;
+        if (!this.queryRunner.instances.has(StockService.name)) {
+            this.stockService = new StockService(this.queryRunner);
+            this.queryRunner.instances.set(StockService.name, this.stockService);
+        } else {
+            this.stockService = this.queryRunner.instances.get(StockService.name) as IStockService;
         }
-        this.userService = new UserService(this.queryRunner);
+
+        if (!this.queryRunner.instances.has(UserService.name)) {
+            this.userService = new UserService(queryRunner);
+            this.queryRunner.instances.set(UserService.name, this.userService);
+        } else {
+            this.userService = this.queryRunner.instances.get(UserService.name) as IUserService;
+        }
     }
 
     @Transaction()
@@ -73,6 +81,15 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
+    async findPortItemByCodeAndPort(portId: number, code: string): Promise<PortfolioItems | null> {
+        return await this.portfolioItemRepository
+            .createQueryBuilder()
+            .where('portId=:portId', { portId: portId })
+            .andWhere('krxCode=:krxCode', { krxCode: code })
+            .getOne();
+    }
+
+    @Transaction()
     async addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
         const portfolio = await this.findPortById(portId);
         if (!portfolio) {
@@ -81,9 +98,7 @@ export class PortfolioService implements IPortfolioService {
 
         let insertItems: PortfolioItems[] = [];
         for (const item of items) {
-            const portfolioItem = await this.portfolioItemRepository.findOne({
-                where: { portfolio: { id: portId }, krxCode: { krxCode: item.krxCode } },
-            });
+            const portfolioItem = await this.findPortItemByCodeAndPort(portId, item.krxCode);
 
             if (portfolioItem) {
                 await this.portfolioItemRepository.update(portfolioItem.id, {

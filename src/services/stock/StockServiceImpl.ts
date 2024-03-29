@@ -9,6 +9,7 @@ import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
 import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
+import { IService } from '../IService';
 
 export class StockService implements IStockService {
     name: string = 'StockService';
@@ -34,16 +35,19 @@ export class StockService implements IStockService {
         this.priceRepository = queryRunner.manager.getRepository(Price);
 
         if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
+            this.queryRunner.instances = new Map<string, IService>();
         }
 
-        this.queryRunner.instances.push(this.name);
-
-        if (this.queryRunner.instances.includes(UserService.name)) {
-            return;
+        if (!this.queryRunner.instances.has(this.name)) {
+            this.queryRunner.instances.set(this.name, this);
         }
 
-        this.userService = new UserService(queryRunner);
+        if (!this.queryRunner.instances.has(UserService.name)) {
+            this.userService = new UserService(queryRunner);
+            this.queryRunner.instances.set(UserService.name, this.userService);
+        } else {
+            this.userService = this.queryRunner.instances.get(UserService.name) as IUserService;
+        }
     }
 
     @Transaction()

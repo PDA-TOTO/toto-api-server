@@ -9,6 +9,7 @@ import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import { IPortfolioService } from '../portfolio/IPortfolioService';
 import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
+import { IService } from '../IService';
 
 dotenv.config();
 
@@ -27,20 +28,27 @@ export class UserService implements IUserService {
         this.queryRunner = queryRunner;
         this.userRepository = queryRunner.manager.getRepository(User);
 
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
+        if (!queryRunner.instances) {
+            queryRunner.instances = new Map<string, IService>();
         }
 
-        this.queryRunner.instances.push(this.name);
-        if (this.queryRunner.instances.includes(BalanceService.name)) {
-            return;
+        if (!queryRunner.instances.has(this.name)) {
+            queryRunner.instances.set(this.name, this);
         }
-        this.balanceService = new BalanceService(queryRunner);
 
-        if (this.queryRunner.instances.includes(PortfolioService.name)) {
-            return;
+        if (!queryRunner.instances.has(BalanceService.name)) {
+            this.balanceService = new BalanceService(queryRunner);
+            queryRunner.instances.set(BalanceService.name, this.balanceService);
+        } else {
+            this.balanceService = queryRunner.instances.get(BalanceService.name) as IBalanceService;
         }
-        this.portfolioService = new PortfolioService(queryRunner);
+
+        if (!queryRunner.instances.has(PortfolioService.name)) {
+            this.portfolioService = new PortfolioService(queryRunner);
+            queryRunner.instances.set(PortfolioService.name, this.portfolioService);
+        } else {
+            this.portfolioService = queryRunner.instances.get(PortfolioService.name) as IPortfolioService;
+        }
     }
 
     @Transaction()

@@ -39,4 +39,5 @@ export interface IPortfolioService extends IService {
         isMain?: boolean // 없으면 메인 아님,
     ): Promise<PORTFOILIO>; // items는 종목 코드 있어도 되고 없어도 됨
     deletePortfolio(portfolio: PORTFOILIO): Promise<PORTFOILIO>;
+    findPortItemByCodeAndPort(portId: number, code: string): Promise<PortfolioItems | null>;
 }

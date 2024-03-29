@@ -28,7 +28,7 @@ export const Transaction = () => {
                 await s.queryRunner.release();
 
                 let queryRunner = AppDataSource.createQueryRunner();
-                queryRunner.instances = [];
+                queryRunner.instances = new Map<string, IService>();
                 s.setQueryRunner(queryRunner);
             }
         };
