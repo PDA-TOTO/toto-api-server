@@ -68,10 +68,13 @@ export class CommentService implements ICommentService {
       }
       return {
         ...commentWithoutLikes,
+        commentId: comment.id,
         communityId: communityId,
         isLiked: isLiked,
         writerId: comment.vote.user.id,
+        writerEmail: comment.vote.user.email,
         writerVoteType: comment.vote.voteType,
+        likeAmount: comment.likes.length,
       };
     });
 

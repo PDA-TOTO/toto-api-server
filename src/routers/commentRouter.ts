@@ -11,11 +11,11 @@ const router: Router = express.Router();
 const commentService = new CommentService(AppDataSource.createQueryRunner());
 
 router.get(
-  "/",
+  "/list/:communityId",
   nullalbeAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { communityId } = req.body;
+      const communityId = Number(req.params.communityId);
       const result = await commentService.commentFindByCommunityId(
         communityId,
         req.user?.id

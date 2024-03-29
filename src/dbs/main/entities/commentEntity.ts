@@ -36,4 +36,7 @@ export default class Comment {
 
   @OneToMany(() => Like, (like) => like.comment)
   likes: Like[];
+
+  @CreateDateColumn({ comment: "댓글 생성 날짜" })
+  createdAt: Date;
 }
