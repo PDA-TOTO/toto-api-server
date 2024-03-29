@@ -8,6 +8,7 @@ import validateHandler from '../middlewares/validateHandler/validateHandler';
 
 const router: Router = express.Router();
 
+console.log('---- star portfolio ----');
 const portfolioService: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());
 
 router.post('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {

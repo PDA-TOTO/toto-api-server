@@ -1,7 +1,13 @@
-import { Repository, QueryRunner } from 'typeorm';
+import { Repository, QueryRunner, In } from 'typeorm';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
-import { CreateStockTransactionLogRequest, FinanceResponse, IStockService, StockChartResponse } from './IStockService';
+import {
+    CreateStockTransactionLogRequest,
+    FinanceResponse,
+    GetStockTransactionsResponse,
+    IStockService,
+    StockChartResponse,
+} from './IStockService';
 import { IUserService } from '../user/IUserService';
 import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
@@ -10,9 +16,12 @@ import Price from '../../dbs/main/entities/priceEntity';
 import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
 import { UserService } from '../user/UserServiceImpl';
 import { createService } from '../serviceCreator';
+import { IPortfolioService } from '../portfolio/IPortfolioService';
+import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
 
 export class StockService implements IStockService {
     userService: IUserService;
+    portfolioService: IPortfolioService;
     name: string = 'StockService';
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
@@ -31,6 +40,7 @@ export class StockService implements IStockService {
         this.financeRepository = queryRunner.manager.getRepository(Finance);
         this.priceRepository = queryRunner.manager.getRepository(Price);
         this.userService = createService(queryRunner, UserService.name, this, this.name) as IUserService;
+        this.portfolioService = createService(queryRunner, PortfolioService.name, this, this.name) as IPortfolioService;
     }
 
     @Transaction()
@@ -85,6 +95,42 @@ export class StockService implements IStockService {
 
         if (!recentPrice) throw new ApplicationError(500, 'PRICE NULL');
         return this.toFinanceResponse(recentPrice.ePr, finances);
+    }
+
+    @Transaction()
+    async findStockTransactionByUserId(
+        userId: number,
+        size?: number,
+        page?: number
+    ): Promise<GetStockTransactionsResponse> {
+        if (!size) size = 7;
+        if (!page) page = 1;
+
+        const portfolios = await this.portfolioService.getAllPortfolios(userId);
+
+        const [stockTransactions, total] = await this.stockTransactionRepository.findAndCount({
+            where: {
+                portfolio: {
+                    id: In(portfolios.map((p) => p.id)),
+                },
+            },
+            relations: {
+                code: true,
+            },
+            take: size,
+            skip: (page - 1) * size,
+            order: {
+                createdAt: 'DESC',
+            },
+        });
+
+        return {
+            total: total,
+            size: size,
+            page: page,
+            lastPage: Math.ceil(total / size),
+            data: stockTransactions,
+        };
     }
 
     @Transaction()
