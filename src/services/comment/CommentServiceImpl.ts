@@ -9,6 +9,7 @@ import { StockService } from "../stock/StockServiceImpl";
 import { Transaction } from "../transaction";
 import Like, { LikeType } from "../../dbs/main/entities/likeEntity";
 import { commentFindByCommunityIdType } from "./ICommentService";
+import { createService } from "../serviceCreator";
 
 export class CommentService implements ICommentService {
   communityRepository: Repository<Community>;
@@ -32,18 +33,12 @@ export class CommentService implements ICommentService {
     this.voteRepository = queryRunner.manager.getRepository(Vote);
     this.userRepository = queryRunner.manager.getRepository(User);
     this.likeRepository = queryRunner.manager.getRepository(Like);
-
-    if (!this.queryRunner.instances) {
-      this.queryRunner.instances = [];
-    }
-
-    this.queryRunner.instances.push(this.name);
-
-    if (this.queryRunner.instances.includes(StockService.name)) {
-      return;
-    }
-
-    this.stockService = new StockService(queryRunner);
+    this.stockService = createService(
+      queryRunner,
+      StockService.name,
+      this,
+      this.name
+    ) as IStockService;
   }
 
   @Transaction()

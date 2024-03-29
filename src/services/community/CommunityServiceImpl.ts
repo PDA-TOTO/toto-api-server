@@ -7,6 +7,7 @@ import { IStockService } from "../stock/IStockService";
 import { StockService } from "../stock/StockServiceImpl";
 import ApplicationError from "../../utils/error/applicationError";
 import User from "../../dbs/main/entities/userEntity";
+import { createService } from "../serviceCreator";
 
 export class CommunityService implements ICommunityService {
   communityRepository: Repository<Community>;
@@ -26,17 +27,12 @@ export class CommunityService implements ICommunityService {
     this.voteRepository = queryRunner.manager.getRepository(Vote);
     this.userRepository = queryRunner.manager.getRepository(User);
 
-    if (!this.queryRunner.instances) {
-      this.queryRunner.instances = [];
-    }
-
-    this.queryRunner.instances.push(this.name);
-
-    if (this.queryRunner.instances.includes(StockService.name)) {
-      return;
-    }
-
-    this.stockService = new StockService(queryRunner);
+    this.stockService = createService(
+      queryRunner,
+      StockService.name,
+      this,
+      this.name
+    ) as IStockService;
   }
 
   @Transaction()

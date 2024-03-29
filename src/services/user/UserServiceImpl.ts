@@ -2,19 +2,23 @@ import { Repository, QueryRunner } from 'typeorm';
 import User from '../../dbs/main/entities/userEntity';
 import { AccountResponse, IBalanceService } from '../balance/IBalanceService';
 import { IUserService, VisibleUserResponse } from './IUserService';
-import { BalanceService } from '../balance/BalanceServiceImpl';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
+import { IPortfolioService } from '../portfolio/IPortfolioService';
+import { createService } from '../serviceCreator';
+import { BalanceService } from '../balance/BalanceServiceImpl';
+import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
 
 dotenv.config();
 
 export class UserService implements IUserService {
-    name: string = 'UserService';
     userRepository: Repository<User>;
     balanceService: IBalanceService;
+    portfolioService: IPortfolioService;
     queryRunner: QueryRunner;
+    name: string = 'UserService';
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -24,15 +28,18 @@ export class UserService implements IUserService {
         this.queryRunner = queryRunner;
         this.userRepository = queryRunner.manager.getRepository(User);
 
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
-        }
+        this.balanceService = createService(queryRunner, BalanceService.name, this, this.name) as IBalanceService;
+        this.portfolioService = createService(queryRunner, PortfolioService.name, this, this.name) as IPortfolioService;
+    }
 
-        this.queryRunner.instances.push(this.name);
-        if (this.queryRunner.instances.includes(BalanceService.name)) {
-            return;
-        }
-        this.balanceService = new BalanceService(queryRunner);
+    @Transaction()
+    async findById(id: number): Promise<User | null> {
+        return await this.userRepository.findOne({
+            where: { id: id },
+            relations: {
+                account: true,
+            },
+        });
     }
 
     @Transaction()
@@ -54,6 +61,7 @@ export class UserService implements IUserService {
         const user: User = await this.userRepository.save({ email: email, password: hashedPassword });
 
         const account: AccountResponse = await this.balanceService.createAccount(user);
+        await this.portfolioService.createPortfolio(user.id, '기본 포트폴리오', [], true);
 
         return this.mapToVisibleUser(user, account);
     }
