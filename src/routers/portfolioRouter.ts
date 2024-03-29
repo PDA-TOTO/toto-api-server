@@ -76,7 +76,7 @@ router.post('/:id/buy', buyMiddlewares, async (req: Request, res: Response, next
         );
         return res.status(200).json({
             success: true,
-            message: '포트폴리오 가져오기 성공',
+            message: '주식 사기(포트폴리오 담기) 성공',
         });
     } catch (err) {
         next(err);

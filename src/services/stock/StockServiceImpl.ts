@@ -3,17 +3,17 @@ import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import { CreateStockTransactionLogRequest, FinanceResponse, IStockService, StockChartResponse } from './IStockService';
 import { IUserService } from '../user/IUserService';
-import { UserService } from '../user/UserServiceImpl';
 import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
 import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
-import { IService } from '../IService';
+import { UserService } from '../user/UserServiceImpl';
+import { createService } from '../serviceCreator';
 
 export class StockService implements IStockService {
-    name: string = 'StockService';
     userService: IUserService;
+    name: string = 'StockService';
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
     financeRepository: Repository<Finance>;
@@ -23,9 +23,6 @@ export class StockService implements IStockService {
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
     }
-    getFinance(code: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
 
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
@@ -33,21 +30,7 @@ export class StockService implements IStockService {
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
         this.financeRepository = queryRunner.manager.getRepository(Finance);
         this.priceRepository = queryRunner.manager.getRepository(Price);
-
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = new Map<string, IService>();
-        }
-
-        if (!this.queryRunner.instances.has(this.name)) {
-            this.queryRunner.instances.set(this.name, this);
-        }
-
-        if (!this.queryRunner.instances.has(UserService.name)) {
-            this.userService = new UserService(queryRunner);
-            this.queryRunner.instances.set(UserService.name, this.userService);
-        } else {
-            this.userService = this.queryRunner.instances.get(UserService.name) as IUserService;
-        }
+        this.userService = createService(queryRunner, UserService.name, this, this.name) as IUserService;
     }
 
     @Transaction()

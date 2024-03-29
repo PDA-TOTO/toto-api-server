@@ -2,23 +2,23 @@ import { Repository, QueryRunner } from 'typeorm';
 import User from '../../dbs/main/entities/userEntity';
 import { AccountResponse, IBalanceService } from '../balance/IBalanceService';
 import { IUserService, VisibleUserResponse } from './IUserService';
-import { BalanceService } from '../balance/BalanceServiceImpl';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import { IPortfolioService } from '../portfolio/IPortfolioService';
+import { createService } from '../serviceCreator';
+import { BalanceService } from '../balance/BalanceServiceImpl';
 import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
-import { IService } from '../IService';
 
 dotenv.config();
 
 export class UserService implements IUserService {
-    name: string = 'UserService';
     userRepository: Repository<User>;
     balanceService: IBalanceService;
     portfolioService: IPortfolioService;
     queryRunner: QueryRunner;
+    name: string = 'UserService';
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -28,27 +28,8 @@ export class UserService implements IUserService {
         this.queryRunner = queryRunner;
         this.userRepository = queryRunner.manager.getRepository(User);
 
-        if (!queryRunner.instances) {
-            queryRunner.instances = new Map<string, IService>();
-        }
-
-        if (!queryRunner.instances.has(this.name)) {
-            queryRunner.instances.set(this.name, this);
-        }
-
-        if (!queryRunner.instances.has(BalanceService.name)) {
-            this.balanceService = new BalanceService(queryRunner);
-            queryRunner.instances.set(BalanceService.name, this.balanceService);
-        } else {
-            this.balanceService = queryRunner.instances.get(BalanceService.name) as IBalanceService;
-        }
-
-        if (!queryRunner.instances.has(PortfolioService.name)) {
-            this.portfolioService = new PortfolioService(queryRunner);
-            queryRunner.instances.set(PortfolioService.name, this.portfolioService);
-        } else {
-            this.portfolioService = queryRunner.instances.get(PortfolioService.name) as IPortfolioService;
-        }
+        this.balanceService = createService(queryRunner, BalanceService.name, this, this.name) as IBalanceService;
+        this.portfolioService = createService(queryRunner, PortfolioService.name, this, this.name) as IPortfolioService;
     }
 
     @Transaction()

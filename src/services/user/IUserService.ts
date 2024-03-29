@@ -17,6 +17,7 @@ export interface IUserService extends IService {
     userRepository: Repository<User>;
     balanceService: IBalanceService;
     portfolioService: IPortfolioService;
+    name: string;
 
     isExistByEmail(email: string): Promise<boolean>;
     emailSignUp(email: string, password: string): Promise<VisibleUserResponse>;

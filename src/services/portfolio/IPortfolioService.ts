@@ -5,7 +5,6 @@ import PortfolioItems from '../../dbs/main/entities/PortfolioItemsEntity';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { IBalanceService } from '../balance/IBalanceService';
 import { IStockService } from '../stock/IStockService';
-import { VisibleUser } from '../user/userServiceReturnType';
 import { IUserService } from '../user/IUserService';
 
 export type SetPortfolioItemRequest = {

@@ -5,14 +5,14 @@ import { IBalanceService } from '../balance/IBalanceService';
 import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
 import { PortfolioItemRequest, IPortfolioService, SetPortfolioItemRequest } from './IPortfolioService';
-import { BalanceService } from '../balance/BalanceServiceImpl';
-import { StockService } from '../stock/StockServiceImpl';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { IUserService } from '../user/IUserService';
-import { UserService } from '../user/UserServiceImpl';
 import ApplicationError from '../../utils/error/applicationError';
 import { TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
-import { IService } from '../IService';
+import { BalanceService } from '../balance/BalanceServiceImpl';
+import { StockService } from '../stock/StockServiceImpl';
+import { UserService } from '../user/UserServiceImpl';
+import { createService } from '../serviceCreator';
 
 export class PortfolioService implements IPortfolioService {
     queryRunner: QueryRunner;
@@ -24,7 +24,6 @@ export class PortfolioService implements IPortfolioService {
     balanceService: IBalanceService;
     stockService: IStockService;
     userService: IUserService;
-    static getAllPortfolios: any; // static property
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -35,34 +34,9 @@ export class PortfolioService implements IPortfolioService {
         this.portfolioRepository = queryRunner.manager.getRepository(PORTFOILIO);
         this.portfolioItemRepository = queryRunner.manager.getRepository(PortfolioItems);
 
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = new Map<string, IService>();
-        }
-
-        if (!this.queryRunner.instances.has(this.name)) {
-            this.queryRunner.instances.set(this.name, this);
-        }
-
-        if (!this.queryRunner.instances.has(BalanceService.name)) {
-            this.balanceService = new BalanceService(queryRunner);
-            this.queryRunner.instances.set(BalanceService.name, this.balanceService);
-        } else {
-            this.balanceService = this.queryRunner.instances.get(BalanceService.name) as IBalanceService;
-        }
-
-        if (!this.queryRunner.instances.has(StockService.name)) {
-            this.stockService = new StockService(this.queryRunner);
-            this.queryRunner.instances.set(StockService.name, this.stockService);
-        } else {
-            this.stockService = this.queryRunner.instances.get(StockService.name) as IStockService;
-        }
-
-        if (!this.queryRunner.instances.has(UserService.name)) {
-            this.userService = new UserService(queryRunner);
-            this.queryRunner.instances.set(UserService.name, this.userService);
-        } else {
-            this.userService = this.queryRunner.instances.get(UserService.name) as IUserService;
-        }
+        this.balanceService = createService(queryRunner, BalanceService.name, this, this.name) as IBalanceService;
+        this.stockService = createService(queryRunner, StockService.name, this, this.name) as IStockService;
+        this.userService = createService(queryRunner, UserService.name, this, this.name) as IUserService;
     }
 
     @Transaction()

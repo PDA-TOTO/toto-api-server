@@ -3,7 +3,6 @@ import { IService } from '../IService';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction, TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
 import { IUserService } from '../user/IUserService';
-import { Account } from '../user/userServiceReturnType';
 import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 
