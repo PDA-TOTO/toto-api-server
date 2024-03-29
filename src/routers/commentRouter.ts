@@ -20,7 +20,6 @@ router.get(
         communityId,
         req.user?.id
       );
-      console.log("result:", result);
       res.send(result);
     } catch (error) {
       next(error);

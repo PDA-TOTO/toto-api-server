@@ -8,6 +8,7 @@ import { CommentResponse, ICommentService } from "./ICommentService";
 import { StockService } from "../stock/StockServiceImpl";
 import { Transaction } from "../transaction";
 import Like, { LikeType } from "../../dbs/main/entities/likeEntity";
+import { commentFindByCommunityIdType } from "./ICommentService";
 
 export class CommentService implements ICommentService {
   communityRepository: Repository<Community>;
@@ -49,26 +50,32 @@ export class CommentService implements ICommentService {
   async commentFindByCommunityId(
     communityId: number,
     userId?: number | undefined
-  ): Promise<CommentResponse> {
+  ): Promise<commentFindByCommunityIdType[]> {
     const comment = await this.commentRepository.find({
       where: { community: { id: communityId } },
       relations: ["likes", "vote", "vote.user", "likes.user"],
     });
-    // console.log("comment:", comment);
 
     const filterComment = comment.map((comment) => {
-      console.log(comment);
+      const { likes, vote, ...commentWithoutLikes } = comment;
+      let isLiked: LikeType = LikeType.UNLIKE;
       if (comment.likes.length > 0) {
-        console.log("[LIKE]:", comment.likes);
+        comment.likes.map((like) => {
+          if (like.likeType === LikeType.LIKE && like.user.id === userId) {
+            isLiked = LikeType.LIKE;
+          }
+        });
       }
+      return {
+        ...commentWithoutLikes,
+        communityId: communityId,
+        isLiked: isLiked,
+        writerId: comment.vote.user.id,
+        writerVoteType: comment.vote.voteType,
+      };
     });
 
-    return Promise.resolve({
-      id: 1,
-      codeId: "string",
-      commentId: 1,
-      commentList: [],
-    });
+    return Promise.resolve(filterComment);
   }
 
   @Transaction()

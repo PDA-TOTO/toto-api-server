@@ -20,6 +20,15 @@ export type CommentResponse = {
   commentList: CommentType[];
 };
 
+export type commentFindByCommunityIdType = {
+  id: number;
+  content: string;
+  communityId: number;
+  isLiked: LikeType;
+  writerId: number;
+  writerVoteType: VoteType;
+};
+
 export interface ICommentService extends IService {
   communityRepository: Repository<Community>;
   commentRepository: Repository<Comment>;
@@ -31,7 +40,7 @@ export interface ICommentService extends IService {
   commentFindByCommunityId(
     communityId: number,
     userId?: number
-  ): Promise<CommentResponse>;
+  ): Promise<commentFindByCommunityIdType[]>;
   commentLike(
     commentId: number,
     userId: number,
