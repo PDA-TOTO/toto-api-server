@@ -3,15 +3,17 @@ import { IService } from '../IService';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction, TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
 import { IUserService } from '../user/IUserService';
-import { Account } from '../user/userServiceReturnType';
 import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 
-export type CreateStockTransactionLogRequest = {
-    code: CODE;
+export type LogStock = {
+    krxCode: string;
     price: number;
     amount: number;
-    account: Account;
+};
+export type CreateStockTransactionLogRequest = {
+    stock: LogStock[];
+    portId: number;
     transactionType: TransactionType;
 };
 
