@@ -46,4 +46,9 @@ export interface ICommentService extends IService {
     userId: number,
     likeType: LikeType
   ): Promise<void>;
+  commentSave(
+    content: string,
+    userId: number,
+    communityId: number
+  ): Promise<void>;
 }

@@ -117,4 +117,33 @@ export class CommentService implements ICommentService {
       }
     }
   }
+
+  @Transaction()
+  async commentSave(
+    content: string,
+    userId: number,
+    communityId: number
+  ): Promise<void> {
+    const vote: Vote | null = await this.voteRepository.findOne({
+      where: { community: { id: communityId }, user: { id: userId } },
+    });
+    const user: User | null = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    const community: Community | null = await this.communityRepository.findOne({
+      where: { id: communityId },
+    });
+    if (vote && user && community) {
+      const newComment = new Comment();
+      newComment.content = content;
+      newComment.user = user;
+      newComment.community = community;
+      newComment.vote = vote;
+      try {
+        await this.commentRepository.save(newComment);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
 }

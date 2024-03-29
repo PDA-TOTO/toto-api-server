@@ -47,4 +47,22 @@ router.post(
   }
 );
 
+router.post(
+  "/",
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { communityId, content } = req.body;
+      req.user &&
+        (await commentService.commentSave(content, req.user.id, communityId));
+      res.status(200).json({
+        success: true,
+        message: "댓글 입력 완료",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;
