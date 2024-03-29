@@ -7,7 +7,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     let token = req.cookies.authToken;
     let headerToken = req.headers.authorization;
 
-    console.log(token, headerToken);
+    // console.log(token, headerToken);
     // console.log(req);
     if (!token && headerToken) {
       token = headerToken.split(" ")[1];

@@ -10,6 +10,8 @@ import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
 import INFO from '../../dbs/main/entities/infoEntity';
 
+import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
+import { IService } from '../IService';
 
 export class StockService implements IStockService {
     name: string = 'StockService';
@@ -38,16 +40,19 @@ export class StockService implements IStockService {
 
 
         if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
+            this.queryRunner.instances = new Map<string, IService>();
         }
 
-        this.queryRunner.instances.push(this.name);
-
-        if (this.queryRunner.instances.includes(UserService.name)) {
-            return;
+        if (!this.queryRunner.instances.has(this.name)) {
+            this.queryRunner.instances.set(this.name, this);
         }
 
-        this.userService = new UserService(queryRunner);
+        if (!this.queryRunner.instances.has(UserService.name)) {
+            this.userService = new UserService(queryRunner);
+            this.queryRunner.instances.set(UserService.name, this.userService);
+        } else {
+            this.userService = this.queryRunner.instances.get(UserService.name) as IUserService;
+        }
     }
 
     @Transaction()
@@ -69,13 +74,24 @@ export class StockService implements IStockService {
         
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
-        await this.stockTransactionRepository.save({
-            price: request.price,
-            amount: request.amount,
-            transactionType: request.transactionType,
-            code: request.code,
-            account: request.account,
+        const stockTransactions: StockTransaction[] = request.stock.map((s) => {
+            const stockTransaction = new StockTransaction();
+            stockTransaction.amount = s.amount;
+            stockTransaction.price = s.price;
+            stockTransaction.transactionType = request.transactionType;
+
+            const port = new PORTFOILIO();
+            port.id = request.portId;
+            stockTransaction.portfolio = port;
+
+            const code = new CODE();
+            code.krxCode = s.krxCode;
+            stockTransaction.code = code;
+
+            return stockTransaction;
         });
+
+        await this.stockTransactionRepository.insert(stockTransactions);
     }
     
     @Transaction()

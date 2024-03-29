@@ -8,11 +8,14 @@ import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 import INFO from '../../dbs/main/entities/infoEntity';
 
-export type CreateStockTransactionLogRequest = {
-    code: CODE;
+export type LogStock = {
+    krxCode: string;
     price: number;
     amount: number;
-    account: Account;
+};
+export type CreateStockTransactionLogRequest = {
+    stock: LogStock[];
+    portId: number;
     transactionType: TransactionType;
 };
 

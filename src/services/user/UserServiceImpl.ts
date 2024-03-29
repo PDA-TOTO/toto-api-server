@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
+import { IPortfolioService } from '../portfolio/IPortfolioService';
+import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
+import { IService } from '../IService';
 
 dotenv.config();
 
@@ -14,6 +17,7 @@ export class UserService implements IUserService {
     name: string = 'UserService';
     userRepository: Repository<User>;
     balanceService: IBalanceService;
+    portfolioService: IPortfolioService;
     queryRunner: QueryRunner;
 
     constructor(queryRunner: QueryRunner) {
@@ -24,15 +28,37 @@ export class UserService implements IUserService {
         this.queryRunner = queryRunner;
         this.userRepository = queryRunner.manager.getRepository(User);
 
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = [];
+        if (!queryRunner.instances) {
+            queryRunner.instances = new Map<string, IService>();
         }
 
-        this.queryRunner.instances.push(this.name);
-        if (this.queryRunner.instances.includes(BalanceService.name)) {
-            return;
+        if (!queryRunner.instances.has(this.name)) {
+            queryRunner.instances.set(this.name, this);
         }
-        this.balanceService = new BalanceService(queryRunner);
+
+        if (!queryRunner.instances.has(BalanceService.name)) {
+            this.balanceService = new BalanceService(queryRunner);
+            queryRunner.instances.set(BalanceService.name, this.balanceService);
+        } else {
+            this.balanceService = queryRunner.instances.get(BalanceService.name) as IBalanceService;
+        }
+
+        if (!queryRunner.instances.has(PortfolioService.name)) {
+            this.portfolioService = new PortfolioService(queryRunner);
+            queryRunner.instances.set(PortfolioService.name, this.portfolioService);
+        } else {
+            this.portfolioService = queryRunner.instances.get(PortfolioService.name) as IPortfolioService;
+        }
+    }
+
+    @Transaction()
+    async findById(id: number): Promise<User | null> {
+        return await this.userRepository.findOne({
+            where: { id: id },
+            relations: {
+                account: true,
+            },
+        });
     }
 
     @Transaction()
@@ -54,6 +80,7 @@ export class UserService implements IUserService {
         const user: User = await this.userRepository.save({ email: email, password: hashedPassword });
 
         const account: AccountResponse = await this.balanceService.createAccount(user);
+        await this.portfolioService.createPortfolio(user.id, '기본 포트폴리오', [], true);
 
         return this.mapToVisibleUser(user, account);
     }
