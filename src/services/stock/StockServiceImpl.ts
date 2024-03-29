@@ -32,6 +32,7 @@ export class StockService implements IStockService {
     priceRepository: Repository<Price>;
     infoRepository: Repository<INFO>;
     queryRunner: QueryRunner;
+    infoRepository: Repository<INFO>;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -56,14 +57,14 @@ export class StockService implements IStockService {
             },
         });
     }
-    async showStocks() : Promise<any>{
+    async showStocks(): Promise<any> {
         return this.stockRepository.find();
     }
-        //     // hashing
-        //     const user = await stockRepository.find();
-        //     return user;
-        // };
-        
+    //     // hashing
+    //     const user = await stockRepository.find();
+    //     return user;
+    // };
+
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
         const stockTransactions: StockTransaction[] = request.stock.map((s) => {
@@ -104,6 +105,14 @@ export class StockService implements IStockService {
 
         // 종가를 기준으로 줌
         return price.ePr;
+    }
+
+    @Transaction()
+    async getDesc(code: string): Promise<any> {
+        console.log(code);
+        const desc = await this.infoRepository.find();
+        console.log(desc);
+        return desc;
     }
 
     @Transaction()

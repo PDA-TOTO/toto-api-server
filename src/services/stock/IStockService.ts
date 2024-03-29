@@ -5,8 +5,6 @@ import { StockTransaction, TransactionType } from '../../dbs/main/entities/stock
 import { IUserService } from '../user/IUserService';
 import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
-import { IPortfolioService } from '../portfolio/IPortfolioService';
-import INFO from '../../dbs/main/entities/infoEntity';
 
 export type LogStock = {
     krxCode: string;
@@ -86,9 +84,8 @@ export interface IStockService extends IService {
     priceRepository: Repository<Price>;
     infoRepository: Repository<INFO>;
     userService: IUserService;
-    portfolioService: IPortfolioService;
 
-    showStocks() : Promise<any>;
+    showStocks(): Promise<any>;
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
     getFinanceByCode(code: string): Promise<FinanceResponse>;
