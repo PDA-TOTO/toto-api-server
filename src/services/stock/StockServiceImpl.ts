@@ -8,6 +8,8 @@ import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
+import INFO from '../../dbs/main/entities/infoEntity';
+
 
 export class StockService implements IStockService {
     name: string = 'StockService';
@@ -17,6 +19,7 @@ export class StockService implements IStockService {
     financeRepository: Repository<Finance>;
     priceRepository: Repository<Price>;
     queryRunner: QueryRunner;
+    infoRepository: Repository<INFO>;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -31,6 +34,8 @@ export class StockService implements IStockService {
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
         this.financeRepository = queryRunner.manager.getRepository(Finance);
         this.priceRepository = queryRunner.manager.getRepository(Price);
+        this.infoRepository = queryRunner.manager.getRepository(INFO);
+
 
         if (!this.queryRunner.instances) {
             this.queryRunner.instances = [];
@@ -72,7 +77,15 @@ export class StockService implements IStockService {
             account: request.account,
         });
     }
-
+    
+    @Transaction()
+    async getDesc(code: string): Promise<any> {
+        console.log(code)
+        const desc = await this.infoRepository.find()
+        console.log(desc)
+        return desc
+    }
+    
     @Transaction()
     async getFinanceByCode(code: string): Promise<FinanceResponse> {
         const stockCode = await this.findByCode(code);

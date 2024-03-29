@@ -78,5 +78,13 @@ router.get(
     res.send(response.data);
   }
 );
-
+router.get(
+    "/:code/desc",
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { code } = req.params;
+        console.log(code);
+        const desc = await stockService.getDesc(code);
+        res.send(desc);
+    }
+);
 export default router;

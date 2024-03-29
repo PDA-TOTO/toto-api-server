@@ -6,6 +6,7 @@ import { IUserService } from '../user/IUserService';
 import { Account } from '../user/userServiceReturnType';
 import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
+import INFO from '../../dbs/main/entities/infoEntity';
 
 export type CreateStockTransactionLogRequest = {
     code: CODE;
@@ -54,7 +55,8 @@ export interface IStockService extends IService {
     financeRepository: Repository<Finance>;
     priceRepository: Repository<Price>;
     userService: IUserService;
-
+    
+    getDesc(code : string) : Promise<any>
     showStocks() : Promise<any>;
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
