@@ -52,7 +52,7 @@ router.get('/:code', async (req: Request, res: Response, next: NextFunction) => 
     }
 });
 
-// // 주식 뉴스 가져오기
+
 router.get('/:stockId/news', async (req: Request, res: Response, next: NextFunction) => {
     const url = `https://m.stock.naver.com/api/news/stock/${req.params.stockId}?pageSize=20&page=1`;
     const response = await axios.get(url);
@@ -60,7 +60,7 @@ router.get('/:stockId/news', async (req: Request, res: Response, next: NextFunct
 });
 
 // 코스피, 코스닥 가져오기
-router.get('/majors', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/index/majors', async (req: Request, res: Response, next: NextFunction) => {
     const url = 'https://m.stock.naver.com/api/index/majors';
     const response = await axios.get(url);
     console.log(response.data);
