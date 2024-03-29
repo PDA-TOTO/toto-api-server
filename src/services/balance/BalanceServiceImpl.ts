@@ -40,31 +40,45 @@ export class BalanceService implements IBalanceService {
     }
 
     @Transaction()
-    async deposit(accountId: number, amount: number, price: number): Promise<void> {
+    async depositByAccountId(accountId: number, amount: number): Promise<void> {
         const account = await this.findByAccountId(accountId);
         if (!account) {
             throw new ApplicationError(400, '계좌가 존재하지 않음');
         }
 
-        if (account.amount < amount * price) {
-            throw new ApplicationError(400, '잔고 부족');
-        }
-
-        await this.accountRepository.update(account.id, {
-            amount: () => `amount - ${amount * price}`,
-        });
+        await this.deposit(account, amount);
     }
 
     @Transaction()
-    async withdraw(accountId: number, amount: number, price: number): Promise<void> {
+    async withdrawByAccountId(accountId: number, amount: number): Promise<void> {
         const account = await this.findByAccountId(accountId);
         if (!account) {
             throw new ApplicationError(400, '계좌가 존재하지 않음');
         }
 
-        await this.accountRepository.update(account.id, {
-            amount: () => `amount + ${amount * price}`,
-        });
+        await this.withdraw(account, amount);
+    }
+
+    @Transaction()
+    async depositByUserId(userId: number, amount: number): Promise<void> {
+        const account = await this.findByUserId(userId);
+
+        if (!account) {
+            throw new ApplicationError(400, '해당 유저의 계좌가 존재하지 않음');
+        }
+
+        await this.deposit(account, amount);
+    }
+
+    @Transaction()
+    async withdrawByUserId(userId: number, amount: number): Promise<void> {
+        const account = await this.findByUserId(userId);
+
+        if (!account) {
+            throw new ApplicationError(400, '해당 유저의 계좌가 존재하지 않음');
+        }
+
+        await this.withdraw(account, amount);
     }
 
     @Transaction()
@@ -85,6 +99,24 @@ export class BalanceService implements IBalanceService {
             amount: account.amount,
             account: account.account,
         };
+    }
+
+    @Transaction()
+    async deposit(account: Account, amount: number) {
+        await this.accountRepository.update(account.id, {
+            amount: () => `amount + ${amount}`,
+        });
+    }
+
+    @Transaction()
+    async withdraw(account: Account, amount: number): Promise<void> {
+        if (account.amount < amount) {
+            throw new ApplicationError(400, '잔고 부족');
+        }
+
+        await this.accountRepository.update(account.id, {
+            amount: () => `amount - ${amount}`,
+        });
     }
 
     private generateAccountNumber() {

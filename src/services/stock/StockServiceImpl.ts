@@ -8,6 +8,7 @@ import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
+import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
 
 export class StockService implements IStockService {
     name: string = 'StockService';
@@ -57,13 +58,24 @@ export class StockService implements IStockService {
 
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
-        await this.stockTransactionRepository.save({
-            price: request.price,
-            amount: request.amount,
-            transactionType: request.transactionType,
-            code: request.code,
-            account: request.account,
+        const stockTransactions: StockTransaction[] = request.stock.map((s) => {
+            const stockTransaction = new StockTransaction();
+            stockTransaction.amount = s.amount;
+            stockTransaction.price = s.price;
+            stockTransaction.transactionType = request.transactionType;
+
+            const port = new PORTFOILIO();
+            port.id = request.portId;
+            stockTransaction.portfolio = port;
+
+            const code = new CODE();
+            code.krxCode = s.krxCode;
+            stockTransaction.code = code;
+
+            return stockTransaction;
         });
+
+        await this.stockTransactionRepository.insert(stockTransactions);
     }
 
     @Transaction()
