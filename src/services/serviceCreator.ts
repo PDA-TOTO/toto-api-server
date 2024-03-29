@@ -20,11 +20,11 @@ export function createService(
     }
 
     if (queryRunner.instances.has(serviceName)) {
-        console.log(`get ---> ${serviceName}`);
+        // console.log(`get ---> ${serviceName}`);
         return queryRunner.instances.get(serviceName) as IService;
     }
 
-    console.log(`create ---> ${serviceName}`);
+    // console.log(`create ---> ${serviceName}`);
     switch (serviceName) {
         case UserService.name:
             return new UserService(queryRunner);
