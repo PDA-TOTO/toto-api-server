@@ -58,7 +58,8 @@ export class PortfolioService implements IPortfolioService {
         .where('portfolio.userId = :userId', {userId: userId})
         .getMany();
     }
-    
+
+    @Transaction()
     async buyStock(portId : number , items : PortfolioItems ): Promise<any> {
         items.avg = 0
         // console.log(await this.findportbyId(portId))
@@ -79,20 +80,26 @@ export class PortfolioService implements IPortfolioService {
         })
     }
 
+    @Transaction()
     async addPortfolioItem(items : PortfolioItems ): Promise<void> {
         items.avg = 0
         console.log(items)
         await this.portfolioItemRepository.save(items)
     }
+
+    @Transaction()
     async minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
         throw new Error('Method not implemented.');
     }
     //리턴형식이 Portfolio인데 오피셜타입이 아니라 객체가 Portfolio인척 흉내내는 애라서 부득이하게 any로 함 일단
+    @Transaction()
     async createPortfolio(user: User, portName: string, items?: AddStockInfoRequest[] | undefined): Promise<any> {
         // throw new Error('Method not implemented.');
         return await this.portfolioRepository.save({portName : portName, user : user, isMain : false });     
-    }   
-    async deletePortfolio(portfolio: PORTFOILIO): Promise<any> {
+    }
+
+    @Transaction()
+    async deletePortfolio(portfolio: PORTFOILIO): Promise<any> {    
         await this.portfolioItemRepository.delete({portfolio : portfolio})
         await this.portfolioRepository.delete({id : portfolio.id});     
     }   

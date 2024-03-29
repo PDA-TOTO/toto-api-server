@@ -12,11 +12,11 @@ import { AppDataSource } from '../dbs/main/dataSource';
 const stockService: IStockService = new StockService(AppDataSource.createQueryRunner());
 const router: Router = express.Router();
 
-// router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-//     const stocks = await showStocks();
-//     // console.log(stocks);
-//     res.json(stocks);
-// });
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    const stocks = await stockService.showStocks();
+    // console.log(stocks);
+    res.json(stocks);
+});
 
 router.get('/:code/finance', async (req: Request, res: Response, next: NextFunction) => {
     try {

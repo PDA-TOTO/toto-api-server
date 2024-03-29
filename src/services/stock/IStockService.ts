@@ -47,6 +47,7 @@ export interface IStockService extends IService {
     priceRepository: Repository<Price>;
     userService: IUserService;
 
+    showStocks() : Promise<any>;
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
     getFinanceByCode(code: string): Promise<FinanceResponse>;
