@@ -32,7 +32,6 @@ export class StockService implements IStockService {
     priceRepository: Repository<Price>;
     infoRepository: Repository<INFO>;
     queryRunner: QueryRunner;
-    infoRepository: Repository<INFO>;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
