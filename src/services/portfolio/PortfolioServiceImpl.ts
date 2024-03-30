@@ -5,14 +5,14 @@ import { IBalanceService } from '../balance/IBalanceService';
 import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
 import { PortfolioItemRequest, IPortfolioService, SetPortfolioItemRequest } from './IPortfolioService';
-import { BalanceService } from '../balance/BalanceServiceImpl';
-import { StockService } from '../stock/StockServiceImpl';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { IUserService } from '../user/IUserService';
-import { UserService } from '../user/UserServiceImpl';
 import ApplicationError from '../../utils/error/applicationError';
 import { TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
-import { IService } from '../IService';
+import { BalanceService } from '../balance/BalanceServiceImpl';
+import { StockService } from '../stock/StockServiceImpl';
+import { UserService } from '../user/UserServiceImpl';
+import { createService } from '../serviceCreator';
 
 export class PortfolioService implements IPortfolioService {
     queryRunner: QueryRunner;
@@ -24,7 +24,6 @@ export class PortfolioService implements IPortfolioService {
     balanceService: IBalanceService;
     stockService: IStockService;
     userService: IUserService;
-    static getAllPortfolios: any; // static property
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -35,39 +34,14 @@ export class PortfolioService implements IPortfolioService {
         this.portfolioRepository = queryRunner.manager.getRepository(PORTFOILIO);
         this.portfolioItemRepository = queryRunner.manager.getRepository(PortfolioItems);
 
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = new Map<string, IService>();
-        }
-
-        if (!this.queryRunner.instances.has(this.name)) {
-            this.queryRunner.instances.set(this.name, this);
-        }
-
-        if (!this.queryRunner.instances.has(BalanceService.name)) {
-            this.balanceService = new BalanceService(queryRunner);
-            this.queryRunner.instances.set(BalanceService.name, this.balanceService);
-        } else {
-            this.balanceService = this.queryRunner.instances.get(BalanceService.name) as IBalanceService;
-        }
-
-        if (!this.queryRunner.instances.has(StockService.name)) {
-            this.stockService = new StockService(this.queryRunner);
-            this.queryRunner.instances.set(StockService.name, this.stockService);
-        } else {
-            this.stockService = this.queryRunner.instances.get(StockService.name) as IStockService;
-        }
-
-        if (!this.queryRunner.instances.has(UserService.name)) {
-            this.userService = new UserService(queryRunner);
-            this.queryRunner.instances.set(UserService.name, this.userService);
-        } else {
-            this.userService = this.queryRunner.instances.get(UserService.name) as IUserService;
-        }
+        this.balanceService = createService(queryRunner, BalanceService.name, this, this.name) as IBalanceService;
+        this.stockService = createService(queryRunner, StockService.name, this, this.name) as IStockService;
+        this.userService = createService(queryRunner, UserService.name, this, this.name) as IUserService;
     }
 
     @Transaction()
     async findPortById(portId: number): Promise<PORTFOILIO | null> {
-        return await this.portfolioRepository.findOneBy({ id: portId });
+        return await this.portfolioRepository.findOne({ where: { id: portId }, relations: { user: true } });
     }
 
     @Transaction()
@@ -90,11 +64,22 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
-    async addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
+    async getPortfolioByIdAndOwner(portId: number, userId: number): Promise<PORTFOILIO> {
         const portfolio = await this.findPortById(portId);
         if (!portfolio) {
             throw new ApplicationError(400, '포트폴리오 번호가 존재하지 않음');
         }
+
+        if (portfolio.user.id !== userId) {
+            throw new ApplicationError(400, '포트폴리오 주인이 아닙니다.');
+        }
+
+        return portfolio;
+    }
+
+    @Transaction()
+    async addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
+        const portfolio = await this.getPortfolioByIdAndOwner(portId, userId);
 
         let insertItems: PortfolioItems[] = [];
         for (const item of items) {
@@ -132,8 +117,38 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
-    async minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void> {
-        throw new Error('Method not implemented.');
+    async minusPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void> {
+        const portfolio = await this.getPortfolioByIdAndOwner(portId, userId);
+
+        let deleteItemIds: number[] = [];
+        for (const item of items) {
+            const portfolioItem = await this.findPortItemByCodeAndPort(portId, item.krxCode);
+            if (!portfolioItem) throw new ApplicationError(400, '해당 주식은 포트폴리오 내에 존재하지 않습니다.');
+            if (portfolioItem.amount < item.amount) {
+                throw new ApplicationError(400, '보유 주식보다 더 많이 팔 수 없습니다.');
+            }
+
+            if (portfolioItem.amount === item.amount) {
+                deleteItemIds.push(portfolioItem.id);
+                continue;
+            }
+
+            await this.portfolioItemRepository.update(portfolioItem.id, {
+                amount: () => `amount - ${item.amount}`,
+            });
+        }
+
+        if (deleteItemIds.length > 0) await this.portfolioItemRepository.delete(deleteItemIds);
+
+        await this.balanceService.depositByUserId(
+            userId,
+            items.reduce((acc, cur) => acc + cur.amount * cur.price, 0)
+        );
+        await this.stockService.createLog({
+            stock: items,
+            portId: portId,
+            transactionType: TransactionType.CELL,
+        });
     }
 
     @Transaction()

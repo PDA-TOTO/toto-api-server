@@ -4,9 +4,9 @@ import Account from '../../dbs/main/entities/accountEntity';
 import User from '../../dbs/main/entities/userEntity';
 import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
-import { StockService } from '../stock/StockServiceImpl';
 import ApplicationError from '../../utils/error/applicationError';
-import { IService } from '../IService';
+import { createService } from '../serviceCreator';
+import { StockService } from '../stock/StockServiceImpl';
 
 export class BalanceService implements IBalanceService {
     name: string = 'BalanceService';
@@ -21,21 +21,7 @@ export class BalanceService implements IBalanceService {
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
         this.accountRepository = queryRunner.manager.getRepository(Account);
-
-        if (!this.queryRunner.instances) {
-            this.queryRunner.instances = new Map<string, IService>();
-        }
-
-        if (!this.queryRunner.instances.has(this.name)) {
-            this.queryRunner.instances.set(this.name, this);
-        }
-
-        if (!this.queryRunner.instances.has(StockService.name)) {
-            this.stockService = new StockService(this.queryRunner);
-            this.queryRunner.instances.set(StockService.name, this.stockService);
-        } else {
-            this.stockService = this.queryRunner.instances.get(StockService.name) as IStockService;
-        }
+        this.stockService = createService(queryRunner, StockService.name, this, this.name) as IStockService;
     }
 
     @Transaction()

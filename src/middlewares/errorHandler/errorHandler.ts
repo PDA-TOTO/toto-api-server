@@ -4,7 +4,7 @@ import ApplicationError from '../../utils/error/applicationError';
 export default (err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
     if (err instanceof ApplicationError) {
-        res.status(err.status).json({
+        return res.status(err.status).json({
             success: false,
             message: err.message,
         });

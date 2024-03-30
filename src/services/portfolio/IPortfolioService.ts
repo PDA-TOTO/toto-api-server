@@ -5,7 +5,6 @@ import PortfolioItems from '../../dbs/main/entities/PortfolioItemsEntity';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { IBalanceService } from '../balance/IBalanceService';
 import { IStockService } from '../stock/IStockService';
-import { VisibleUser } from '../user/userServiceReturnType';
 import { IUserService } from '../user/IUserService';
 
 export type SetPortfolioItemRequest = {
@@ -30,7 +29,8 @@ export interface IPortfolioService extends IService {
     findPortById(portId: number): Promise<PORTFOILIO | null>;
     getAllPortfolios(userId: number): Promise<PORTFOILIO[]>;
     addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void>;
-    minusPortfolioItem(request: SetPortfolioItemRequest): Promise<void>;
+    minusPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void>;
+    getPortfolioByIdAndOwner(portId: number, userId: number): Promise<PORTFOILIO>;
     //user타입 넘버 => 수정필요(아직 모름 + 안함)
     createPortfolio(
         userId: number,

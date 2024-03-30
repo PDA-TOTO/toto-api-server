@@ -3,10 +3,10 @@ import { IService } from '../IService';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction, TransactionType } from '../../dbs/main/entities/stockTransactionEntity';
 import { IUserService } from '../user/IUserService';
-import { Account } from '../user/userServiceReturnType';
 import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 import INFO from '../../dbs/main/entities/infoEntity';
+import { IPortfolioService } from '../portfolio/IPortfolioService';
 
 export type LogStock = {
     krxCode: string;
@@ -52,6 +52,14 @@ export type StockChartResponse = {
     bundleUnit: string;
 };
 
+export type GetStockTransactionsResponse = {
+    total: number;
+    size: number;
+    page: number;
+    lastPage: number;
+    data: StockTransaction[];
+};
+
 export interface IStockService extends IService {
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
@@ -61,6 +69,8 @@ export interface IStockService extends IService {
     
     getDesc(code : string) : Promise<any>
     showStocks() : Promise<any>;
+    portfolioService: IPortfolioService;
+
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
     getFinanceByCode(code: string): Promise<FinanceResponse>;
@@ -69,4 +79,5 @@ export interface IStockService extends IService {
         after: Date | null,
         bundleUnit?: 'DAY' | 'MONTH' | 'YEAR' | undefined
     ): Promise<StockChartResponse>;
+    findStockTransactionByUserId(userId: number, size?: number, page?: number): Promise<GetStockTransactionsResponse>;
 }
