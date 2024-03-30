@@ -8,6 +8,7 @@ import { StockService } from "../stock/StockServiceImpl";
 import ApplicationError from "../../utils/error/applicationError";
 import User from "../../dbs/main/entities/userEntity";
 import { createService } from "../serviceCreator";
+import axios from "axios";
 
 export class CommunityService implements ICommunityService {
   communityRepository: Repository<Community>;
@@ -44,6 +45,7 @@ export class CommunityService implements ICommunityService {
     if (!stockCode) {
       throw new ApplicationError(400, "해당 코드의 주식이 존재하지 않음");
     }
+    console.log(stockCode);
 
     const community: Community | null = await this.communityRepository.findOne({
       where: { code: { krxCode: stockCode.krxCode } },
@@ -78,6 +80,7 @@ export class CommunityService implements ICommunityService {
       numOfLikes: likes,
       numOfUnlikes: filterVote.length - likes,
       isVoteType: userVoteType,
+      stockCodeName: stockCode.name,
     };
   }
 
@@ -117,5 +120,33 @@ export class CommunityService implements ICommunityService {
         console.error("Error saving vote2:", error);
       }
     }
+  }
+
+  @Transaction()
+  async getNaverStockInfo(code: string): Promise<void> {
+    const url = `https://m.stock.naver.com/api/stock/${code}/basic`;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  @Transaction()
+  async getNaverRisingStockInfo(list: string[]): Promise<any[]> {
+    const result = [];
+
+    for (const value of list) {
+      const url = `https://m.stock.naver.com/api/stock/${value}/basic`;
+      try {
+        const response = await axios.get(url);
+        result.push(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    return result;
   }
 }
