@@ -6,6 +6,8 @@ import { StockService } from '../services/stock/StockServiceImpl';
 import { AppDataSource } from '../dbs/main/dataSource';
 import { authenticate } from '../middlewares/authenticate/authenticate';
 import { query } from 'express-validator';
+import validateHandler from '../middlewares/validateHandler/validateHandler';
+import ApplicationError from '../utils/error/applicationError';
 
 console.log('---- start stock ----');
 const stockService: IStockService = new StockService(AppDataSource.createQueryRunner());
@@ -17,6 +19,17 @@ const router: Router = express.Router();
 //     res.json(stocks);
 // });
 
+// 코스피, 코스닥 가져오기
+router.get('/majors', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const url = 'https://m.stock.naver.com/api/index/majors';
+        const response = await axios.get(url);
+        return res.send(response.data);
+    } catch (err) {
+        next(new ApplicationError(500, 'API 요청 문제'));
+    }
+});
+
 router.get('/transactions', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { size, page } = req.query;
@@ -25,6 +38,25 @@ router.get('/transactions', authenticate, async (req: Request, res: Response, ne
         return res.status(200).json({
             success: true,
             message: '거래 내역 불러오기',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+const searchMiddlewares = [query('name').notEmpty().withMessage('종목명은 무조건 있어야 합니다.'), validateHandler];
+// 주식 명칭으로 검색
+router.get('/search', searchMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { name } = req.query;
+        if (!name || typeof name !== 'string') throw new Error('Server Internal Error');
+
+        const result = await stockService.searchStock(name);
+
+        res.status(200).json({
+            success: true,
+            message: '주식 검색 성공',
             result: result,
         });
     } catch (err) {
@@ -72,18 +104,7 @@ router.get('/:stockId/news', async (req: Request, res: Response, next: NextFunct
         const response = await axios.get(url);
         return res.send(response.data);
     } catch (err) {
-        next(err);
-    }
-});
-
-// 코스피, 코스닥 가져오기
-router.get('/index/majors', async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const url = 'https://m.stock.naver.com/api/index/majors';
-        const response = await axios.get(url);
-        return res.send(response.data);
-    } catch (err) {
-        next(err);
+        next(new ApplicationError(500, 'API 요청 문제'));
     }
 });
 
