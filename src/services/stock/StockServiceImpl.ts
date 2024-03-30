@@ -1,4 +1,4 @@
-import { Repository, QueryRunner, In } from 'typeorm';
+import { Repository, QueryRunner, In, Like } from 'typeorm';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import {
@@ -153,6 +153,11 @@ export class StockService implements IStockService {
             lastPage: Math.ceil(total / size),
             data: stockTransactions,
         };
+    }
+
+    @Transaction()
+    async searchStock(name: string): Promise<CODE[]> {
+        return this.stockRepository.find({ where: { name: Like(`%${name}%`) } });
     }
 
     @Transaction()
