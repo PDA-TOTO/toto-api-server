@@ -98,7 +98,7 @@ router.post('/tendency', updateTendencyMiddlewares, async (req: Request, res: Re
 // TODO: 디테일하기 가져오기
 router.get('/my-info', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await userService.findByEmail(req.user!.email);
+        const user = await userService.findByEmail(req.user!.email, true);
 
         if (!user) {
             throw new ApplicationError(401, '해당 유저 존재하지 않음');
@@ -108,11 +108,8 @@ router.get('/my-info', authenticate, async (req: Request, res: Response, next: N
             success: true,
             message: '사용자 정보 가져오기 완료',
             result: {
-                id: user.id,
-                email: user.email,
-                account: user.account,
-                tendency: user.tendency,
-                experience : user.experience
+                ...user,
+                password: "Can't see",
             },
         });
     } catch (err) {
