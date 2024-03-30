@@ -23,6 +23,6 @@ export interface IUserService extends IService {
     emailSignUp(email: string, password: string): Promise<VisibleUserResponse>;
     logIn(email: string, password: string): Promise<VisibleUserResponse>;
     updateTendency(email: string, point: number): Promise<string>;
-    findByEmail(email: string): Promise<User | null>;
+    findByEmail(email: string, withPort?: boolean): Promise<User | null>;
     findById(id: number): Promise<User | null>;
 }

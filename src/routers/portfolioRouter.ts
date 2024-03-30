@@ -26,6 +26,7 @@ router.post('/', authenticate, async (req: Request, res: Response, next: NextFun
         next(err);
     }
 });
+
 router.get('/getAllPorts', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await portfolioService.getAllPortfolios(req.user!.id);
@@ -39,15 +40,27 @@ router.get('/getAllPorts', authenticate, async (req: Request, res: Response, nex
     }
 });
 
-router.delete('/deletePort', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // const port: PORTFOILIO = await portfolioService.findPortById(req.body.portId);
-        // console.log(port);
-        // const result = await portfolioService.deletePortfolio(port);
+        const result = await portfolioService.getPortfolioWithRatio(Number(req.params.id), req.user!.id);
+
+        return res.status(200).send({
+            succes: true,
+            message: '포트폴리오 가져오기',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.delete('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await portfolioService.deleteById(Number(req.params.id), req.user!.id);
+
         return res.status(200).json({
             success: true,
-            message: '포트폴리오 가져오기 성공',
-            // result: result
+            message: '포트폴리오 삭제',
         });
     } catch (err) {
         next(err);

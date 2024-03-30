@@ -4,7 +4,7 @@ import PortfolioItems from '../../dbs/main/entities/PortfolioItemsEntity';
 import { IBalanceService } from '../balance/IBalanceService';
 import { Transaction } from '../transaction';
 import { IStockService } from '../stock/IStockService';
-import { PortfolioItemRequest, IPortfolioService, SetPortfolioItemRequest } from './IPortfolioService';
+import { PortfolioItemRequest, IPortfolioService, PortfolioDetailResponse } from './IPortfolioService';
 import CODE from '../../dbs/main/entities/codeEntity';
 import { IUserService } from '../user/IUserService';
 import ApplicationError from '../../utils/error/applicationError';
@@ -40,12 +40,30 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
-    async findPortById(portId: number): Promise<PORTFOILIO | null> {
-        return await this.portfolioRepository.findOne({ where: { id: portId }, relations: { user: true } });
+    async findPortById(portId: number, withItem?: boolean): Promise<PORTFOILIO | null> {
+        return await this.portfolioRepository.findOne({
+            where: { id: portId },
+            relations: {
+                user: true,
+                portfolioItems: {
+                    krxCode: withItem,
+                },
+            },
+        });
     }
 
     @Transaction()
-    async getAllPortfolios(userId: number): Promise<PORTFOILIO[]> {
+    async getAllPortfolios(userId: number, withDeleted?: boolean): Promise<PORTFOILIO[]> {
+        if (withDeleted) {
+            return this.portfolioRepository
+                .createQueryBuilder('portfolio')
+                .leftJoinAndSelect('portfolio.portfolioItems', 'portfolioItems')
+                .leftJoinAndSelect('portfolioItems.krxCode', 'CODE')
+                .where('portfolio.userId = :userId', { userId: userId })
+                .withDeleted()
+                .getMany();
+        }
+
         return this.portfolioRepository
             .createQueryBuilder('portfolio')
             .leftJoinAndSelect('portfolio.portfolioItems', 'portfolioItems')
@@ -64,8 +82,31 @@ export class PortfolioService implements IPortfolioService {
     }
 
     @Transaction()
-    async getPortfolioByIdAndOwner(portId: number, userId: number): Promise<PORTFOILIO> {
-        const portfolio = await this.findPortById(portId);
+    async getPortfolioWithRatio(portId: number, userId: number): Promise<PortfolioDetailResponse> {
+        const portfolio = await this.getPortfolioByIdAndOwner(portId, userId, true);
+
+        const totalPrice = portfolio.portfolioItems.reduce((acc, cur) => acc + cur.avg * cur.amount, 0);
+
+        return {
+            id: portfolio.id,
+            totalPrice: totalPrice,
+            portName: portfolio.portName,
+            isMain: portfolio.isMain,
+            portfolioItems: portfolio.portfolioItems.map((item: PortfolioItems) => {
+                return {
+                    ratio: ((item.amount * item.avg) / totalPrice) * 100,
+                    amount: item.amount,
+                    avg: item.avg,
+                    stockName: item.krxCode.name,
+                    stockCode: item.krxCode.krxCode,
+                };
+            }),
+        };
+    }
+
+    @Transaction()
+    async getPortfolioByIdAndOwner(portId: number, userId: number, withItem?: boolean): Promise<PORTFOILIO> {
+        const portfolio = await this.findPortById(portId, withItem);
         if (!portfolio) {
             throw new ApplicationError(400, '포트폴리오 번호가 존재하지 않음');
         }
@@ -83,6 +124,7 @@ export class PortfolioService implements IPortfolioService {
 
         let insertItems: PortfolioItems[] = [];
         for (const item of items) {
+            if (item.amount <= 0) throw new ApplicationError(400, '수량은 최소 1개 이상이어야 합니다.');
             const portfolioItem = await this.findPortItemByCodeAndPort(portId, item.krxCode);
 
             if (portfolioItem) {
@@ -124,11 +166,13 @@ export class PortfolioService implements IPortfolioService {
         for (const item of items) {
             const portfolioItem = await this.findPortItemByCodeAndPort(portId, item.krxCode);
             if (!portfolioItem) throw new ApplicationError(400, '해당 주식은 포트폴리오 내에 존재하지 않습니다.');
+            if (item.amount <= 0) throw new ApplicationError(400, '수량은 0보다 커야 합니다.');
             if (portfolioItem.amount < item.amount) {
                 throw new ApplicationError(400, '보유 주식보다 더 많이 팔 수 없습니다.');
             }
 
-            if (portfolioItem.amount === item.amount) {
+            // bigint는 typeorm에서 string으로 처리됨...
+            if (Number(portfolioItem.amount) === item.amount) {
                 deleteItemIds.push(portfolioItem.id);
                 continue;
             }
@@ -138,7 +182,7 @@ export class PortfolioService implements IPortfolioService {
             });
         }
 
-        if (deleteItemIds.length > 0) await this.portfolioItemRepository.delete(deleteItemIds);
+        if (deleteItemIds.length > 0) await this.portfolioItemRepository.softDelete(deleteItemIds);
 
         await this.balanceService.depositByUserId(
             userId,
@@ -175,8 +219,29 @@ export class PortfolioService implements IPortfolioService {
 
         return portfolio;
     }
-    async deletePortfolio(portfolio: PORTFOILIO): Promise<any> {
-        await this.portfolioItemRepository.delete({ portfolio: portfolio });
-        await this.portfolioRepository.delete({ id: portfolio.id });
+
+    @Transaction()
+    async deleteById(portId: number, userId: number): Promise<void> {
+        const portfolio = await this.getPortfolioByIdAndOwner(portId, userId, true);
+
+        if (portfolio.isMain) {
+            throw new ApplicationError(400, '메인 포트폴리오는 삭제할 수 없습니다.');
+        }
+
+        const minusItemRequest: PortfolioItemRequest[] = await Promise.all(
+            portfolio.portfolioItems.map(async (item) => {
+                const price = await this.stockService.getRecentPrice(item.krxCode.krxCode);
+
+                return {
+                    krxCode: item.krxCode.krxCode,
+                    amount: item.amount,
+                    price: price,
+                };
+            })
+        );
+
+        await this.minusPortfolioItem(minusItemRequest, portId, userId);
+
+        await this.portfolioRepository.softRemove(portfolio);
     }
 }
