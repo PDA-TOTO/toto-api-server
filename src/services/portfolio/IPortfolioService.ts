@@ -31,7 +31,6 @@ export interface IPortfolioService extends IService {
     addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void>;
     minusPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void>;
     getPortfolioByIdAndOwner(portId: number, userId: number): Promise<PORTFOILIO>;
-    //user타입 넘버 => 수정필요(아직 모름 + 안함)
     createPortfolio(
         userId: number,
         portName: string,
