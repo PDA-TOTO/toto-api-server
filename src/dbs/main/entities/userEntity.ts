@@ -29,3 +29,4 @@ export default class User {
     @OneToMany(() => PORTFOILIO, (portfolio) => portfolio.user)
     portfolios: PORTFOILIO[];
 }
+
