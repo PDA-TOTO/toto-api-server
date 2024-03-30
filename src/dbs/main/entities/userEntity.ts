@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import Account from './accountEntity';
+import PORTFOILIO from './PortfolioEntity';
 
 // nullable default is false
 @Entity()
@@ -24,4 +25,8 @@ export default class User {
 
     @CreateDateColumn({ comment: '회원가입날짜' })
     createdAt: Date;
+
+    @OneToMany(() => PORTFOILIO, (portfolio) => portfolio.user)
+    portfolios: PORTFOILIO[];
 }
+

@@ -1,20 +1,24 @@
-import "reflect-metadata";
-import express, { Express, NextFunction, Request, Response } from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import { AppDataSource } from "./dbs/main/dataSource";
-import errorHandler from "./middlewares/errorHandler/errorHandler";
-import userRouter from "./routers/userRouter";
-import communityRouter from "./routers/communityRouter";
-import commentRouter from "./routers/commentRouter";
-import ApplicationError from "./utils/error/applicationError";
-import cookieParser = require("cookie-parser");
+import 'reflect-metadata';
+import express, { Express, NextFunction, Request, Response } from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import { AppDataSource } from './dbs/main/dataSource';
+import errorHandler from './middlewares/errorHandler/errorHandler';
+import ApplicationError from './utils/error/applicationError';
+import cookieParser = require('cookie-parser');
 
 dotenv.config();
-import stockRouter from "./routers/stockRouter";
-import portfolioRouter from "./routers/portfolioRouter";
-import { VisibleUser } from "./services/user/userServiceReturnType";
-import { IService } from "./services/IService";
+
+import userRouter from './routers/userRouter';
+import stockRouter from './routers/stockRouter';
+import portfolioRouter from './routers/portfolioRouter';
+import communityRouter from './routers/communityRouter';
+import quizRouter from './routers/quizRouter';
+import commentRouter from "./routers/commentRouter";
+
+import { VisibleUser } from './services/user/userServiceReturnType';
+import { IService } from './services/IService';
+
 
 const app: Express = express();
 
@@ -50,10 +54,11 @@ app.use(
   })
 );
 
-app.use("/api/users", userRouter);
-app.use("/api/portfolios", portfolioRouter);
-app.use("/api/stocks", stockRouter);
-app.use("/api/community", communityRouter);
+app.use('/api/users', userRouter);
+app.use('/api/portfolios', portfolioRouter);
+app.use('/api/stocks', stockRouter);
+app.use('/api/community', communityRouter);
+app.use('/api/quiz', quizRouter);
 app.use("/api/comment", commentRouter);
 
 app.all("*", (req: Request, res: Response, next: NextFunction) => {

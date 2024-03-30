@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    DeleteDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import CODE from './codeEntity';
 import PORTFOILIO from './PortfolioEntity';
 
@@ -12,7 +21,7 @@ export default class PortfolioItems {
     @JoinColumn({ name: 'krxCode' })
     krxCode: CODE;
 
-    @ManyToOne(() => PORTFOILIO)
+    @ManyToOne(() => PORTFOILIO, (portfolio) => portfolio.portfolioItems, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'portId' })
     portfolio: PORTFOILIO;
 
@@ -21,4 +30,7 @@ export default class PortfolioItems {
 
     @Column({ name: 'avg', type: 'float', comment: '매수 평균가', unsigned: true })
     avg: number;
+
+    @DeleteDateColumn({ name: 'deleted_at' })
+    deletedAt?: Date;
 }

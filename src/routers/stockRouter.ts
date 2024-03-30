@@ -4,7 +4,10 @@ import { toDate } from '../utils/date/toDate';
 import { IStockService } from '../services/stock/IStockService';
 import { StockService } from '../services/stock/StockServiceImpl';
 import { AppDataSource } from '../dbs/main/dataSource';
+import { authenticate } from '../middlewares/authenticate/authenticate';
+import { query } from 'express-validator';
 
+console.log('---- start stock ----');
 const stockService: IStockService = new StockService(AppDataSource.createQueryRunner());
 const router: Router = express.Router();
 
@@ -13,6 +16,21 @@ const router: Router = express.Router();
 //     // console.log(stocks);
 //     res.json(stocks);
 // });
+
+router.get('/transactions', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { size, page } = req.query;
+
+        const result = await stockService.findStockTransactionByUserId(req.user!.id, Number(size), Number(page));
+        return res.status(200).json({
+            success: true,
+            message: '거래 내역 불러오기',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
 
 router.get('/:code/finance', async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -49,16 +67,24 @@ router.get('/:code', async (req: Request, res: Response, next: NextFunction) => 
 });
 
 router.get('/:stockId/news', async (req: Request, res: Response, next: NextFunction) => {
-    const url = `https://m.stock.naver.com/api/news/stock/${req.params.stockId}?pageSize=20&page=1`;
-    const response = await axios.get(url);
-    res.send(response.data);
+    try {
+        const url = `https://m.stock.naver.com/api/news/stock/${req.params.stockId}?pageSize=20&page=1`;
+        const response = await axios.get(url);
+        return res.send(response.data);
+    } catch (err) {
+        next(err);
+    }
 });
 
 // 코스피, 코스닥 가져오기
 router.get('/index/majors', async (req: Request, res: Response, next: NextFunction) => {
-    const url = 'https://m.stock.naver.com/api/index/majors';
-    const response = await axios.get(url);
-    res.send(response.data);
+    try {
+        const url = 'https://m.stock.naver.com/api/index/majors';
+        const response = await axios.get(url);
+        return res.send(response.data);
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;

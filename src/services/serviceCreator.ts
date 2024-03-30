@@ -4,6 +4,7 @@ import { UserService } from './user/UserServiceImpl';
 import { StockService } from './stock/StockServiceImpl';
 import { PortfolioService } from './portfolio/PortfolioServiceImpl';
 import { BalanceService } from './balance/BalanceServiceImpl';
+import { CommunityService } from './community/CommunityServiceImpl';
 
 export function createService(
     queryRunner: QueryRunner,
@@ -34,6 +35,8 @@ export function createService(
             return new PortfolioService(queryRunner);
         case BalanceService.name:
             return new BalanceService(queryRunner);
+        case CommunityService.name:
+            return new CommunityService(queryRunner);
         default:
             throw new Error(`${serviceName} is not enroll at factory`);
     }

@@ -1,5 +1,13 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import CODE from './codeEntity';
+import {
+    Column,
+    CreateDateColumn,
+    DeleteDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import PortfolioItems from './PortfolioItemsEntity';
 import User from './userEntity';
 
@@ -19,6 +27,9 @@ export default class PORTFOILIO {
     @Column({ name: 'is_main', type: 'boolean', default: false })
     isMain: boolean;
 
-    @OneToMany(() => PortfolioItems, (portfolioItems) => portfolioItems.portfolio)
+    @OneToMany(() => PortfolioItems, (portfolioItems) => portfolioItems.portfolio, { cascade: true })
     portfolioItems: PortfolioItems[];
+
+    @DeleteDateColumn({ name: 'deleted_at' })
+    deletedAt?: Date;
 }
