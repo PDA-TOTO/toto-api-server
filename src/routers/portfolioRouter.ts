@@ -14,7 +14,8 @@ const portfolioService: IPortfolioService = new PortfolioService(AppDataSource.c
 router.post('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { portName, items } = req.body;
-
+        console.log(req.user!.id)
+        console.log(req.body)
         const result = await portfolioService.createPortfolio(req.user!.id, portName, items);
         return res.status(201).json({
             success: true,
