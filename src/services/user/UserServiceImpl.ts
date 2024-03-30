@@ -107,11 +107,12 @@ export class UserService implements IUserService {
     }
 
     @Transaction()
-    async findByEmail(email: string): Promise<User | null> {
+    async findByEmail(email: string, withPort?: boolean): Promise<User | null> {
         return await this.userRepository.findOne({
             where: { email: email },
             relations: {
                 account: true,
+                portfolios: withPort,
             },
         });
     }
