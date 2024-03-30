@@ -76,6 +76,26 @@ export class StockService implements IStockService {
     }
 
     @Transaction()
+    async getRecentPrice(code: string): Promise<number> {
+        // TODO: 최근가격을 Redis로 교체할 필요가 있음.
+        const price = await this.priceRepository.findOne({
+            where: {
+                code: {
+                    krxCode: code,
+                },
+            },
+            order: {
+                date: 'DESC',
+            },
+        });
+
+        if (!price) throw new ApplicationError(400, '해당 코드가 존재하지 않습니다.');
+
+        // 종가를 기준으로 줌
+        return price.ePr;
+    }
+
+    @Transaction()
     async getFinanceByCode(code: string): Promise<FinanceResponse> {
         const stockCode = await this.findByCode(code);
         if (!stockCode) throw new ApplicationError(400, '해당 주식이 존재하지 않음');
@@ -106,7 +126,7 @@ export class StockService implements IStockService {
         if (!size) size = 7;
         if (!page) page = 1;
 
-        const portfolios = await this.portfolioService.getAllPortfolios(userId);
+        const portfolios = await this.portfolioService.getAllPortfolios(userId, true);
 
         const [stockTransactions, total] = await this.stockTransactionRepository.findAndCount({
             where: {
@@ -114,7 +134,9 @@ export class StockService implements IStockService {
                     id: In(portfolios.map((p) => p.id)),
                 },
             },
+            withDeleted: true,
             relations: {
+                portfolio: true,
                 code: true,
             },
             take: size,

@@ -76,4 +76,5 @@ export interface IStockService extends IService {
         bundleUnit?: 'DAY' | 'MONTH' | 'YEAR' | undefined
     ): Promise<StockChartResponse>;
     findStockTransactionByUserId(userId: number, size?: number, page?: number): Promise<GetStockTransactionsResponse>;
+    getRecentPrice(code: string): Promise<number>;
 }
