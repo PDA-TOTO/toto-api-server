@@ -5,6 +5,7 @@ import {
     CreateStockTransactionLogRequest,
     FinanceResponse,
     GetStockTransactionsResponse,
+    GetStockWithCapResponse,
     IStockService,
     StockChartResponse,
 } from './IStockService';
@@ -221,6 +222,52 @@ export class StockService implements IStockService {
             .getRawMany();
 
         return { ...response, chartLength: stockCharts.length, chart: stockCharts };
+    }
+
+    @Transaction()
+    async getStocksOrderByCap(page?: number, size?: number): Promise<GetStockWithCapResponse> {
+        if (!size) size = 7;
+        if (!page) page = 1;
+
+        const lastDate = this.financeRepository
+            .createQueryBuilder()
+            .subQuery()
+            .addSelect('last.code, max(last.yymm) as last_date')
+            .from(Finance, 'last')
+            .groupBy('last.code')
+            .getQuery();
+
+        const [stocks, total] = await this.financeRepository
+            .createQueryBuilder('finance')
+            .innerJoin(lastDate, 'lastDate', 'finance.code = lastDate.code and finance.yymm = lastDate.last_date')
+            .leftJoinAndSelect('finance.code', 'CODE')
+            .take(size)
+            .skip((page - 1) * size)
+            .orderBy('finance.cap', 'DESC')
+            .getManyAndCount();
+
+        return {
+            total: total,
+            size: size,
+            page: page,
+            lastPage: Math.ceil(total / size),
+            data: stocks.map((stock) => ({
+                code: stock.code.krxCode,
+                name: stock.code.name,
+                cap: stock.cap,
+                yymm: stock.yymm,
+            })),
+        };
+        // this.financeRepository.createQueryBuilder()
+        // .subQuery()
+        // .select(['finance.code as code', 'finance.cap as cap'])
+        // .from(Finance, 'finance')
+        // .groupBy('finance.code')
+        // .getQuery();
+
+        // await this.stockTransactionRepository.findAnd
+
+        throw new Error('Method not implemented.');
     }
 
     toFinanceResponse(price: number, finances: Finance[]): FinanceResponse {

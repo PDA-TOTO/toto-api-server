@@ -59,6 +59,19 @@ export type GetStockTransactionsResponse = {
     data: StockTransaction[];
 };
 
+export type GetStockWithCapResponse = {
+    total: number;
+    size: number;
+    page: number;
+    lastPage: number;
+    data: {
+        code: string;
+        name: string;
+        cap: number;
+        yymm: string;
+    }[];
+};
+
 export interface IStockService extends IService {
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
@@ -78,4 +91,5 @@ export interface IStockService extends IService {
     findStockTransactionByUserId(userId: number, size?: number, page?: number): Promise<GetStockTransactionsResponse>;
     getRecentPrice(code: string): Promise<number>;
     searchStock(name: string): Promise<CODE[]>;
+    getStocksOrderByCap(page?: number, size?: number): Promise<GetStockWithCapResponse>;
 }

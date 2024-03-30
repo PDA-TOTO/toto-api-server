@@ -45,6 +45,21 @@ router.get('/transactions', authenticate, async (req: Request, res: Response, ne
     }
 });
 
+router.get('/search/cap', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { size, page } = req.query;
+
+        const result = await stockService.getStocksOrderByCap(Number(page), Number(size));
+        return res.status(200).json({
+            success: true,
+            message: '시가 총액 순으로 불러오기',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 const searchMiddlewares = [query('name').notEmpty().withMessage('종목명은 무조건 있어야 합니다.'), validateHandler];
 // 주식 명칭으로 검색
 router.get('/search', searchMiddlewares, async (req: Request, res: Response, next: NextFunction) => {
