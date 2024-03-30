@@ -18,16 +18,16 @@ export default class Comment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Community, { cascade: true })
+  @ManyToOne(() => Community)
   @JoinColumn({ name: "community_id" })
   community: Community;
 
   // comment 단 user
-  @ManyToOne(() => User, { cascade: true })
+  @ManyToOne(() => User)
   @JoinColumn({ name: "user_id" })
   user: User;
 
-  @ManyToOne(() => Vote, { cascade: true })
+  @ManyToOne(() => Vote)
   @JoinColumn({ name: "vote_id" })
   vote: Vote;
 

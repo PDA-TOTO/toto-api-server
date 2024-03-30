@@ -54,10 +54,14 @@ export class CommentService implements ICommentService {
     const filterComment = comment.map((comment) => {
       const { likes, vote, ...commentWithoutLikes } = comment;
       let isLiked: LikeType = LikeType.UNLIKE;
+      let likeLength: number = 0;
       if (comment.likes.length > 0) {
         comment.likes.map((like) => {
           if (like.likeType === LikeType.LIKE && like.user.id === userId) {
             isLiked = LikeType.LIKE;
+          }
+          if (like.likeType === LikeType.LIKE) {
+            likeLength += 1;
           }
         });
       }
@@ -69,7 +73,7 @@ export class CommentService implements ICommentService {
         writerId: comment.vote.user.id,
         writerEmail: comment.vote.user.email,
         writerVoteType: comment.vote.voteType,
-        likeAmount: comment.likes.length,
+        likeAmount: likeLength,
       };
     });
 
