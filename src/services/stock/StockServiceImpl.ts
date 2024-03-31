@@ -14,7 +14,7 @@ import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
 import INFO from '../../dbs/main/entities/infoEntity';
-
+import CODE from '../../dbs/main/entities/codeEntity';
 import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
 import { UserService } from '../user/UserServiceImpl';
 import { createService } from '../serviceCreator';
@@ -92,17 +92,23 @@ export class StockService implements IStockService {
     @Transaction()
     async getRecentPrice(code: string): Promise<number> {
         // TODO: 최근가격을 Redis로 교체할 필요가 있음.
+        let Code = new CODE();
+        Code.krxCode = code
+        console.log(code)
         const price = await this.priceRepository.findOne({
+            // where: {
+            //     code : {
+            //         krxCode: code,
+            //     },
+            // },
             where: {
-                code: {
-                    krxCode: code,
-                },
+                code : Code
             },
             order: {
                 date: 'DESC',
             },
         });
-
+        console.log("price" ,price)
         if (!price) throw new ApplicationError(400, '해당 코드가 존재하지 않습니다.');
 
         // 종가를 기준으로 줌
