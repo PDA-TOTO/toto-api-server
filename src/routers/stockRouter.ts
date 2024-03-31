@@ -8,6 +8,7 @@ import { authenticate } from "../middlewares/authenticate/authenticate";
 import { query } from "express-validator";
 import validateHandler from "../middlewares/validateHandler/validateHandler";
 import ApplicationError from "../utils/error/applicationError";
+import INFO from "../dbs/main/entities/infoEntity";
 
 console.log("---- start stock ----");
 const stockService: IStockService = new StockService(
@@ -155,6 +156,24 @@ router.get(
       return res.send(response.data);
     } catch (err) {
       next(new ApplicationError(500, "API 요청 문제"));
+    }
+  }
+);
+
+const infoRepo = AppDataSource.getRepository(INFO);
+router.get(
+  "/:stockId/info",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const response = await infoRepo.find({
+        where: { krxCode: req.params.stockId },
+      });
+      res.status(200).json(response);
+
+      //   const response = await stockService.getStockInfo(req.params.stockId);
+      //   return res.status(200).json(response);
+    } catch (error) {
+      next(error);
     }
   }
 );
