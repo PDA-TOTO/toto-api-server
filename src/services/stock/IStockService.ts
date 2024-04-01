@@ -5,6 +5,7 @@ import { StockTransaction, TransactionType } from '../../dbs/main/entities/stock
 import { IUserService } from '../user/IUserService';
 import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
+import INFO from '../../dbs/main/entities/infoEntity';
 import { IPortfolioService } from '../portfolio/IPortfolioService';
 import INFO from '../../dbs/main/entities/infoEntity';
 
@@ -85,6 +86,9 @@ export interface IStockService extends IService {
     priceRepository: Repository<Price>;
     infoRepository: Repository<INFO>;
     userService: IUserService;
+    
+    getDesc(code : string) : Promise<any>
+    showStocks() : Promise<any>;
     portfolioService: IPortfolioService;
 
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
