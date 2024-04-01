@@ -41,7 +41,7 @@ router.get('/getAllPorts', authenticate, async (req: Request, res: Response, nex
 
 router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const portfolioService2: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());     
+        const portfolioService2: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());
         const result = await portfolioService2.getPortfolioWithRatio(Number(req.params.id), req.user!.id);
 
         return res.status(200).send({
@@ -56,8 +56,8 @@ router.get('/:id', authenticate, async (req: Request, res: Response, next: NextF
 
 router.delete('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const portfolioService2: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());     
-        const result = await portfolioService2.deleteById(  Number(req.params.id), req.user!.id)
+        const portfolioService2: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());
+        const result = await portfolioService2.deleteById(Number(req.params.id), req.user!.id);
 
         return res.status(200).send({
             succes: true,
@@ -142,19 +142,21 @@ router.get('/:id/beta', authenticate, async (req: Request, res: Response, next: 
     try {
         // const portId = req.params.id
         const ports = await portfolioService.getAllPortfolios(req.user!.id);
-        if(!ports){
+        if (!ports) {
             return res.status(400).json({
-                status : "error"
-            })
+                status: 'error',
+            });
         }
-        
+
         // Promise 배열을 저장할 배열
         const betaPromisesArray = ports.map(async (elem, idx) => {
             const portItems = elem.portfolioItems;
-            const betas = await Promise.all(portItems.map(async (item, idx) => {
-                const beta = await portfolioService.getBeta(item.krxCode.krxCode);
-                return beta;
-            }));
+            const betas = await Promise.all(
+                portItems.map(async (item, idx) => {
+                    const beta = await portfolioService.getBeta(item.krxCode.krxCode);
+                    return beta;
+                })
+            );
             return betas;
         });
 
