@@ -46,14 +46,11 @@ export default class Finance {
     @Column({ name: 'dividend_rate', type: 'float', comment: '배당률' })
     dividendRate: number;
 
-    @Column({ name: 'quick_ratio', type: 'float', comment: '당좌비율' })
+    @Column({ name: 'quick_ratio', type: 'float', comment: '당좌비율', nullable: true })
     quickRatio: number;
 
-    @Column({ name: 'consensus', type: 'bigint', comment: '컨센서스' })
+    @Column({ name: 'consensus', type: 'bigint', comment: '컨센서스', nullable: true })
     consensus: number;
-
-    @Column({ name: 'beta', type: 'float', comment: 'beta' })
-    beta: number;
 
     // 배당률, 배당금, 당좌비율, consensus, beta
 }

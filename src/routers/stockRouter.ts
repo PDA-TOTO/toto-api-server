@@ -154,7 +154,8 @@ router.get('/:code/recent', async (req: Request, res: Response, next: NextFuncti
 
 router.get('/:code/my', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const result = await stockService.getMyStockInfo(req.params.code, req.user!.id);
+        const stockService2: IStockService = new StockService(AppDataSource.createQueryRunner());
+        const result = await stockService2.getMyStockInfo(req.params.code, req.user!.id);
         return res.status(200).json({
             success: true,
             message: '내 주식 현황',
