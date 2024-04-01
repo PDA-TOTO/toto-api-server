@@ -76,6 +76,7 @@ export type GetStockWithCapResponse = {
 export type MyStockResponse = {
     num: number;
     avg: number;
+    trust: string;
 };
 
 export interface IStockService extends IService {

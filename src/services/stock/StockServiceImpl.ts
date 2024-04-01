@@ -167,7 +167,7 @@ export class StockService implements IStockService {
     @Transaction()
     async getMyStockInfo(code: string, userId: number): Promise<MyStockResponse> {
         const portfolios = await this.portfolioService.getAllPortfolios(userId);
-
+        const stock = await this.findByCode(code, true);
         let sum = 0;
         let numOfStocks = 0;
         for (const portfolio of portfolios) {
@@ -181,9 +181,20 @@ export class StockService implements IStockService {
             });
         }
 
+        const getTrust = (beta?: number) => {
+            if (!beta) return 'C';
+
+            if (beta > 2) return 'B+';
+            if (beta > 1) return 'A';
+            if (beta > 0.5) return 'A+';
+
+            return 'B';
+        };
+
         return {
             num: numOfStocks,
             avg: sum / numOfStocks ? sum / numOfStocks : 0,
+            trust: getTrust(stock?.finances[0].beta),
         };
     }
 
