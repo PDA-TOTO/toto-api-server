@@ -56,7 +56,10 @@ export class StockService implements IStockService {
             },
         });
     }
-
+    async showStocks() : Promise<any>{
+        return this.stockRepository.find();
+    }
+        
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
         const stockTransactions: StockTransaction[] = request.stock.map((s) => {
@@ -78,21 +81,30 @@ export class StockService implements IStockService {
 
         await this.stockTransactionRepository.insert(stockTransactions);
     }
-
+    
+    @Transaction()
+    async getDesc(code: string): Promise<any> {
+        console.log(code)
+        const desc = await this.infoRepository.find()
+        console.log(desc)
+        return desc
+    }
+    
     @Transaction()
     async getRecentPrice(code: string): Promise<number> {
         // TODO: 최근가격을 Redis로 교체할 필요가 있음.
+        let Code = new CODE();
+        Code.krxCode = code
+        console.log(code)
         const price = await this.priceRepository.findOne({
             where: {
-                code: {
-                    krxCode: code,
-                },
+                code : Code
             },
             order: {
                 date: 'DESC',
             },
         });
-
+        console.log("price" ,price)
         if (!price) throw new ApplicationError(400, '해당 코드가 존재하지 않습니다.');
 
         // 종가를 기준으로 줌
