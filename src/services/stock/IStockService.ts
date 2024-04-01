@@ -7,7 +7,7 @@ import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 import INFO from '../../dbs/main/entities/infoEntity';
 import { IPortfolioService } from '../portfolio/IPortfolioService';
-import INFO from '../../dbs/main/entities/infoEntity';
+import beta from '../../dbs/main/entities/betaEntity';
 
 export type LogStock = {
     krxCode: string;
@@ -77,20 +77,23 @@ export type GetStockWithCapResponse = {
 export type MyStockResponse = {
     num: number;
     avg: number;
+    trust: string;
 };
 
 export interface IStockService extends IService {
     stockRepository: Repository<CODE>;
+    betaRepository: Repository<beta>;
     stockTransactionRepository: Repository<StockTransaction>;
     financeRepository: Repository<Finance>;
     priceRepository: Repository<Price>;
     infoRepository: Repository<INFO>;
     userService: IUserService;
-    
-    getDesc(code : string) : Promise<any>
-    showStocks() : Promise<any>;
+
+    getDesc(code: string): Promise<any>;
+    showStocks(): Promise<any>;
     portfolioService: IPortfolioService;
 
+    showStocks(): Promise<any>;
     findByCode(code: string, isRelationFinance?: boolean): Promise<CODE | null>;
     createLog(request: CreateStockTransactionLogRequest): Promise<void>;
     getFinanceByCode(code: string): Promise<FinanceResponse>;

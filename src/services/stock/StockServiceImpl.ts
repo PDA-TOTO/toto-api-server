@@ -21,6 +21,7 @@ import { UserService } from '../user/UserServiceImpl';
 import { createService } from '../serviceCreator';
 import { IPortfolioService } from '../portfolio/IPortfolioService';
 import { PortfolioService } from '../portfolio/PortfolioServiceImpl';
+import beta from '../../dbs/main/entities/betaEntity';
 
 export class StockService implements IStockService {
     userService: IUserService;
@@ -32,6 +33,7 @@ export class StockService implements IStockService {
     priceRepository: Repository<Price>;
     infoRepository: Repository<INFO>;
     queryRunner: QueryRunner;
+    betaRepository: Repository<beta>;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -39,6 +41,7 @@ export class StockService implements IStockService {
 
     setQueryRunner(queryRunner: QueryRunner): void {
         this.queryRunner = queryRunner;
+        this.betaRepository = queryRunner.manager.getRepository(beta);
         this.stockRepository = queryRunner.manager.getRepository(CODE);
         this.stockTransactionRepository = queryRunner.manager.getRepository(StockTransaction);
         this.financeRepository = queryRunner.manager.getRepository(Finance);
@@ -56,10 +59,9 @@ export class StockService implements IStockService {
             },
         });
     }
-    async showStocks() : Promise<any>{
+    async showStocks(): Promise<any> {
         return this.stockRepository.find();
     }
-        
     @Transaction()
     async createLog(request: CreateStockTransactionLogRequest): Promise<void> {
         const stockTransactions: StockTransaction[] = request.stock.map((s) => {
@@ -89,22 +91,22 @@ export class StockService implements IStockService {
         console.log(desc)
         return desc
     }
-    
+  
     @Transaction()
     async getRecentPrice(code: string): Promise<number> {
         // TODO: 최근가격을 Redis로 교체할 필요가 있음.
         let Code = new CODE();
-        Code.krxCode = code
-        console.log(code)
+        Code.krxCode = code;
+        console.log(code);
         const price = await this.priceRepository.findOne({
             where: {
-                code : Code
+                code: Code,
             },
             order: {
                 date: 'DESC',
             },
         });
-        console.log("price" ,price)
+
         if (!price) throw new ApplicationError(400, '해당 코드가 존재하지 않습니다.');
 
         // 종가를 기준으로 줌
@@ -130,7 +132,9 @@ export class StockService implements IStockService {
         });
 
         if (!recentPrice) throw new ApplicationError(500, 'PRICE NULL');
-        return this.toFinanceResponse(recentPrice.ePr, finances);
+
+        const beta = await this.betaRepository.findOne({ where: { krxCode: stockCode.krxCode } });
+        return this.toFinanceResponse(recentPrice.ePr, finances, beta);
     }
 
     @Transaction()
@@ -179,7 +183,7 @@ export class StockService implements IStockService {
     @Transaction()
     async getMyStockInfo(code: string, userId: number): Promise<MyStockResponse> {
         const portfolios = await this.portfolioService.getAllPortfolios(userId);
-
+        const stock = await this.findByCode(code, true);
         let sum = 0;
         let numOfStocks = 0;
         for (const portfolio of portfolios) {
@@ -193,9 +197,22 @@ export class StockService implements IStockService {
             });
         }
 
+        const beta = await this.betaRepository.findOne({ where: { krxCode: code } });
+
+        const getTrust = (beta: beta) => {
+            if (!beta) return 'C';
+
+            if (beta.beta > 2) return 'B+';
+            if (beta.beta > 1) return 'A';
+            if (beta.beta > 0.5) return 'A+';
+
+            return 'B';
+        };
+
         return {
             num: numOfStocks,
             avg: sum / numOfStocks ? sum / numOfStocks : 0,
+            trust: beta ? getTrust(beta) : 'C',
         };
     }
 
@@ -304,19 +321,9 @@ export class StockService implements IStockService {
                 yymm: stock.yymm,
             })),
         };
-        // this.financeRepository.createQueryBuilder()
-        // .subQuery()
-        // .select(['finance.code as code', 'finance.cap as cap'])
-        // .from(Finance, 'finance')
-        // .groupBy('finance.code')
-        // .getQuery();
-
-        // await this.stockTransactionRepository.findAnd
-
-        throw new Error('Method not implemented.');
     }
 
-    toFinanceResponse(price: number, finances: Finance[]): FinanceResponse {
+    toFinanceResponse(price: number, finances: Finance[], beta: beta | null): FinanceResponse {
         const recent: Finance = finances[0];
         const old: Finance = finances[1];
 
@@ -342,7 +349,7 @@ export class StockService implements IStockService {
             dividendRate: recent.dividendRate,
             quickRatio: recent.quickRatio,
             consensus: recent.consensus,
-            beta: recent.beta,
+            beta: beta ? beta.beta : 1,
             revGrownthRate: ((recent.rev - old.rev) / Math.abs(old.rev)) * 100,
             incomeGrownthRate: ((recent.income - old.income) / Math.abs(old.income)) * 100,
             netincomeGrownthRate: ((recent.netincome - old.netincome) / Math.abs(old.netincome)) * 100,

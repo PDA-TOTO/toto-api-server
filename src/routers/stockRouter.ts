@@ -166,33 +166,19 @@ router.get('/:code/my', authenticate, async (req: Request, res: Response, next: 
 });
 router.get('/:code/price', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log(req.params.code)
-        const price = await stockService.getRecentPrice(req.params.code)
-        return res.send(price)
+        console.log(req.params.code);
+        const price = await stockService.getRecentPrice(req.params.code);
+        return res.send(price);
     } catch (err) {
         next(err);
     }
 });
-// 코스피, 코스닥 가져오기
-router.get('/index/majors', async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const result = await stockService.getMyStockInfo(req.params.code, req.user!.id);
-        return res.status(200).json({
-            success: true,
-            message: '내 주식 현황',
-            result: result,
-        });
-    } catch (err) {
-        next(err);
-    }
+
+router.get('/:code/desc', async (req: Request, res: Response, next: NextFunction) => {
+    const { code } = req.params;
+    console.log(code);
+    const desc = await stockService.getDesc(code);
+    res.send(desc);
 });
-router.get(
-    "/:code/desc",
-    async (req: Request, res: Response, next: NextFunction) => {
-        const { code } = req.params;
-        console.log(code);
-        const desc = await stockService.getDesc(code);
-        res.send(desc);
-    }
-);
+
 export default router;
