@@ -79,8 +79,8 @@ router.get('/:stockId/news', async (req: Request, res: Response, next: NextFunct
 router.get('/:code/price', async (req: Request, res: Response, next: NextFunction) => {
     try {
         console.log(req.params.code)
-        const price = await stockService.getRecentPrice("000020")
-        console.log(price)
+        const price = await stockService.getRecentPrice(req.params.code)
+        console.log
         return res.send(price)
     } catch (err) {
         next(err);

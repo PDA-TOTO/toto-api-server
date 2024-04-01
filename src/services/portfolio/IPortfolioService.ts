@@ -6,6 +6,7 @@ import CODE from '../../dbs/main/entities/codeEntity';
 import { IBalanceService } from '../balance/IBalanceService';
 import { IStockService } from '../stock/IStockService';
 import { IUserService } from '../user/IUserService';
+import beta from '../../dbs/main/entities/betaEntity';
 
 export type SetPortfolioItemRequest = {
     amount: number;
@@ -37,9 +38,12 @@ export type PortfolioDetailResponse = {
 export interface IPortfolioService extends IService {
     portfolioRepository: Repository<PORTFOILIO>;
     portfolioItemRepository: Repository<PortfolioItems>;
+    betaRepository : Repository<beta>
+    
     balanceService: IBalanceService;
     userService: IUserService;
     stockService: IStockService;
+    getBeta(code : string) : Promise<any>;
     findPortById(portId: number, withItem?: boolean): Promise<PORTFOILIO | null>;
     getAllPortfolios(userId: number, withDeleted?: boolean): Promise<PORTFOILIO[]>;
     addPortfolioItem(items: PortfolioItemRequest[], portId: number, userId: number): Promise<void>;
