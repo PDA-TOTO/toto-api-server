@@ -99,7 +99,7 @@ const buyCellMiddlewares = [
 ];
 
 router.put(
-  "/:id/cell",
+  "/:id/sell",
   buyCellMiddlewares,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
