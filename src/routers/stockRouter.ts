@@ -164,5 +164,20 @@ router.get('/:code/my', authenticate, async (req: Request, res: Response, next: 
         next(err);
     }
 });
+router.get('/:code/price', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        console.log(req.params.code);
+        const price = await stockService.getRecentPrice(req.params.code);
+        return res.send(price);
+    } catch (err) {
+        next(err);
+    }
+});
 
+router.get('/:code/desc', async (req: Request, res: Response, next: NextFunction) => {
+    const { code } = req.params;
+    console.log(code);
+    const desc = await stockService.getDesc(code);
+    res.send(desc);
+});
 export default router;
