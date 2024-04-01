@@ -139,6 +139,19 @@ router.get('/:stockId/info', async (req: Request, res: Response, next: NextFunct
     }
 });
 
+router.get('/:code/recent', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await stockService.getRecentPrice(req.params.code);
+        res.status(200).json({
+            success: true,
+            message: '최근 가격 가지고 오기',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.get('/:code/my', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await stockService.getMyStockInfo(req.params.code, req.user!.id);
