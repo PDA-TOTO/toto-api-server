@@ -38,17 +38,14 @@ declare module 'typeorm' {
 // Main DB Connection
 AppDataSource.initialize().then(() => console.log('Main DB Connected!'));
 
-const SERVER_PORT = process.env.SERVER_PORT;
-app.listen(SERVER_PORT, () => {
-    console.log(`Server Start: Listening Port on ${SERVER_PORT}`);
-});
+const origin = process.env.ORIGIN;
 
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
     cors({
-        origin: 'http://localhost:5173',
+        origin: origin,
         credentials: true,
     })
 );
@@ -65,3 +62,8 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use(errorHandler);
+
+const SERVER_PORT = process.env.SERVER_PORT;
+app.listen(SERVER_PORT, () => {
+    console.log(`Server Start: Listening Port on ${SERVER_PORT}`);
+});
