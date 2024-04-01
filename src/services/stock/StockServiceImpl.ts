@@ -88,11 +88,6 @@ export class StockService implements IStockService {
         Code.krxCode = code;
         console.log(code);
         const price = await this.priceRepository.findOne({
-            // where: {
-            //     code : {
-            //         krxCode: code,
-            //     },
-            // },
             where: {
                 code: Code,
             },

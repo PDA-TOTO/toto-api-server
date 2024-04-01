@@ -13,6 +13,7 @@ import { BalanceService } from '../balance/BalanceServiceImpl';
 import { StockService } from '../stock/StockServiceImpl';
 import { UserService } from '../user/UserServiceImpl';
 import { createService } from '../serviceCreator';
+import beta from '../../dbs/main/entities/betaEntity';
 
 export class PortfolioService implements IPortfolioService {
     queryRunner: QueryRunner;
@@ -20,6 +21,7 @@ export class PortfolioService implements IPortfolioService {
 
     portfolioRepository: Repository<PORTFOILIO>;
     portfolioItemRepository: Repository<PortfolioItems>;
+    betaRepository : Repository<beta>;
 
     balanceService: IBalanceService;
     stockService: IStockService;
@@ -33,6 +35,7 @@ export class PortfolioService implements IPortfolioService {
         this.queryRunner = queryRunner;
         this.portfolioRepository = queryRunner.manager.getRepository(PORTFOILIO);
         this.portfolioItemRepository = queryRunner.manager.getRepository(PortfolioItems);
+        this.betaRepository = queryRunner.manager.getRepository(beta);
 
         this.balanceService = createService(queryRunner, BalanceService.name, this, this.name) as IBalanceService;
         this.stockService = createService(queryRunner, StockService.name, this, this.name) as IStockService;
@@ -116,6 +119,14 @@ export class PortfolioService implements IPortfolioService {
         }
 
         return portfolio;
+    }
+    @Transaction()
+    async getBeta(code : string): Promise<number> {
+        const result = await this.betaRepository.findOne({where : {krxCode : code}})
+        if(!result){
+            throw new ApplicationError(400, '베타가 없습니다.');
+        }
+        return result.beta
     }
 
     @Transaction()

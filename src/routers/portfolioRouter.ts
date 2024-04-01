@@ -41,11 +41,27 @@ router.get('/getAllPorts', authenticate, async (req: Request, res: Response, nex
 
 router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const result = await portfolioService.getPortfolioWithRatio(Number(req.params.id), req.user!.id);
+        const portfolioService2: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());     
+        const result = await portfolioService2.getPortfolioWithRatio(Number(req.params.id), req.user!.id);
 
         return res.status(200).send({
             succes: true,
             message: '포트폴리오 가져오기',
+            result: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.delete('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const portfolioService2: IPortfolioService = new PortfolioService(AppDataSource.createQueryRunner());     
+        const result = await portfolioService2.deleteById(  Number(req.params.id), req.user!.id)
+
+        return res.status(200).send({
+            succes: true,
+            message: '포트폴리오 삭제',
             result: result,
         });
     } catch (err) {
@@ -122,4 +138,38 @@ router.post('/:id/buy', buyCellMiddlewares, async (req: Request, res: Response, 
         next(err);
     }
 });
+router.get('/:id/beta', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // const portId = req.params.id
+        const ports = await portfolioService.getAllPortfolios(req.user!.id);
+        if(!ports){
+            return res.status(400).json({
+                status : "error"
+            })
+        }
+        
+        // Promise 배열을 저장할 배열
+        const betaPromisesArray = ports.map(async (elem, idx) => {
+            const portItems = elem.portfolioItems;
+            const betas = await Promise.all(portItems.map(async (item, idx) => {
+                const beta = await portfolioService.getBeta(item.krxCode.krxCode);
+                return beta;
+            }));
+            return betas;
+        });
+
+        const betas = await Promise.all(betaPromisesArray);
+
+        console.log(betas);
+
+        return res.status(200).send({
+            success: true,
+            // result: ports,
+            betas: betas, // 각 포트폴리오 항목에 대한 베타값을 포함하는 배열
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 export default router;
