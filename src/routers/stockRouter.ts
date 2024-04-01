@@ -168,7 +168,6 @@ router.get('/:code/price', async (req: Request, res: Response, next: NextFunctio
     try {
         console.log(req.params.code)
         const price = await stockService.getRecentPrice(req.params.code)
-        console.log
         return res.send(price)
     } catch (err) {
         next(err);
