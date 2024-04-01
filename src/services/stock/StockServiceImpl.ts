@@ -83,15 +83,15 @@ export class StockService implements IStockService {
 
         await this.stockTransactionRepository.insert(stockTransactions);
     }
-
+    
     @Transaction()
     async getDesc(code: string): Promise<any> {
-        console.log(code);
-        const desc = await this.infoRepository.find();
-        console.log(desc);
-        return desc;
+        console.log(code)
+        const desc = await this.infoRepository.find()
+        console.log(desc)
+        return desc
     }
-
+  
     @Transaction()
     async getRecentPrice(code: string): Promise<number> {
         // TODO: 최근가격을 Redis로 교체할 필요가 있음.
@@ -106,7 +106,7 @@ export class StockService implements IStockService {
                 date: 'DESC',
             },
         });
-        console.log('price', price);
+
         if (!price) throw new ApplicationError(400, '해당 코드가 존재하지 않습니다.');
 
         // 종가를 기준으로 줌
