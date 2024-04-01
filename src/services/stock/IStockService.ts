@@ -7,6 +7,7 @@ import Price from '../../dbs/main/entities/priceEntity';
 import Finance from '../../dbs/main/entities/financeEntity';
 import INFO from '../../dbs/main/entities/infoEntity';
 import { IPortfolioService } from '../portfolio/IPortfolioService';
+import INFO from '../../dbs/main/entities/infoEntity';
 
 export type LogStock = {
     krxCode: string;
@@ -60,11 +61,30 @@ export type GetStockTransactionsResponse = {
     data: StockTransaction[];
 };
 
+export type GetStockWithCapResponse = {
+    total: number;
+    size: number;
+    page: number;
+    lastPage: number;
+    data: {
+        code: string;
+        name: string;
+        cap: number;
+        yymm: string;
+    }[];
+};
+
+export type MyStockResponse = {
+    num: number;
+    avg: number;
+};
+
 export interface IStockService extends IService {
     stockRepository: Repository<CODE>;
     stockTransactionRepository: Repository<StockTransaction>;
     financeRepository: Repository<Finance>;
     priceRepository: Repository<Price>;
+    infoRepository: Repository<INFO>;
     userService: IUserService;
     
     getDesc(code : string) : Promise<any>
@@ -81,4 +101,8 @@ export interface IStockService extends IService {
     ): Promise<StockChartResponse>;
     findStockTransactionByUserId(userId: number, size?: number, page?: number): Promise<GetStockTransactionsResponse>;
     getRecentPrice(code: string): Promise<number>;
+    searchStock(name: string): Promise<CODE[]>;
+    getStocksOrderByCap(page?: number, size?: number): Promise<GetStockWithCapResponse>;
+    getStockInfo(stockId: string): Promise<INFO[]>;
+    getMyStockInfo(code: string, userId: number): Promise<MyStockResponse>;
 }

@@ -218,6 +218,10 @@ export class PortfolioService implements IPortfolioService {
             throw new ApplicationError(400, '유저 존재하지 않음');
         }
 
+        if (await this.portfolioRepository.existsBy({ user: { id: userId }, portName: portName })) {
+            throw new ApplicationError(400, '포트폴리오 이름 중복');
+        }
+
         const portfolio: PORTFOILIO = await this.portfolioRepository.save({
             portName: portName,
             user: { id: userId },

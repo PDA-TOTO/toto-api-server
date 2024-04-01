@@ -15,6 +15,7 @@ export type CommunityResponse = {
   numOfLikes: number;
   numOfUnlikes: number;
   isVoteType: VoteType;
+  stockCodeName: string;
 };
 
 export interface ICommunityService extends IService {
@@ -32,4 +33,6 @@ export interface ICommunityService extends IService {
     communityId: number,
     voteType: VoteType
   ): Promise<void>;
+  getNaverStockInfo(code: string): Promise<void>;
+  getNaverRisingStockInfo(list: string[]): Promise<any[]>;
 }

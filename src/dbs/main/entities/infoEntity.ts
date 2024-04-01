@@ -1,17 +1,35 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import CODE from './codeEntity';
-import PORTFOILIO from './PortfolioEntity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
+@Entity("INFO")
+export default class INFO {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-@Entity('INFO')
-export default class INFO {    
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column({
+    name: "krxCode",
+    type: "varchar",
+    length: "30",
+    comment: "종목 코드",
+    nullable: false,
+  })
+  krxCode: string;
 
-    @ManyToOne(() => CODE)
-    @JoinColumn({ name: 'krxCode' })
-    krxCode: CODE;
-    
-    @Column({ comment: '포트이름'})
-    INFO : String;
+  @Column({
+    name: "INFO",
+    type: "varchar",
+    length: "100",
+    comment: "종목 개요",
+    nullable: false,
+  })
+  INFO: string;
 }

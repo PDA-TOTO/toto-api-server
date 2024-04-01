@@ -1,10 +1,14 @@
-import { Repository, QueryRunner, In } from 'typeorm';
+import { Repository, QueryRunner, In, Like } from 'typeorm';
+import CODE from '../../dbs/main/entities/codeEntity';
+import INFO from '../../dbs/main/entities/infoEntity';
 import { StockTransaction } from '../../dbs/main/entities/stockTransactionEntity';
 import {
     CreateStockTransactionLogRequest,
     FinanceResponse,
     GetStockTransactionsResponse,
+    GetStockWithCapResponse,
     IStockService,
+    MyStockResponse,
     StockChartResponse,
 } from './IStockService';
 import { IUserService } from '../user/IUserService';
@@ -12,8 +16,6 @@ import { Transaction } from '../transaction';
 import ApplicationError from '../../utils/error/applicationError';
 import Finance from '../../dbs/main/entities/financeEntity';
 import Price from '../../dbs/main/entities/priceEntity';
-import INFO from '../../dbs/main/entities/infoEntity';
-import CODE from '../../dbs/main/entities/codeEntity';
 import PORTFOILIO from '../../dbs/main/entities/PortfolioEntity';
 import { UserService } from '../user/UserServiceImpl';
 import { createService } from '../serviceCreator';
@@ -28,8 +30,8 @@ export class StockService implements IStockService {
     stockTransactionRepository: Repository<StockTransaction>;
     financeRepository: Repository<Finance>;
     priceRepository: Repository<Price>;
-    queryRunner: QueryRunner;
     infoRepository: Repository<INFO>;
+    queryRunner: QueryRunner;
 
     constructor(queryRunner: QueryRunner) {
         this.setQueryRunner(queryRunner);
@@ -170,6 +172,34 @@ export class StockService implements IStockService {
     }
 
     @Transaction()
+    async searchStock(name: string): Promise<CODE[]> {
+        return this.stockRepository.find({ where: { name: Like(`%${name}%`) } });
+    }
+
+    @Transaction()
+    async getMyStockInfo(code: string, userId: number): Promise<MyStockResponse> {
+        const portfolios = await this.portfolioService.getAllPortfolios(userId);
+
+        let sum = 0;
+        let numOfStocks = 0;
+        for (const portfolio of portfolios) {
+            const port = await this.portfolioService.getPortfolioByIdAndOwner(portfolio.id, userId, true);
+
+            port.portfolioItems.forEach((item) => {
+                if (item.krxCode.krxCode === code) {
+                    sum += item.avg * item.amount;
+                    numOfStocks += Number(item.amount);
+                }
+            });
+        }
+
+        return {
+            num: numOfStocks,
+            avg: sum / numOfStocks ? sum / numOfStocks : 0,
+        };
+    }
+
+    @Transaction()
     async getInfoWithChart(
         code: string,
         after: Date | null,
@@ -206,7 +236,11 @@ export class StockService implements IStockService {
                 .groupBy(`DATE_FORMAT(price.date, '%Y')`)
                 .getRawMany();
 
-            return { ...response, chartLength: stockCharts.length, chart: stockCharts };
+            return {
+                ...response,
+                chartLength: stockCharts.length,
+                chart: stockCharts,
+            };
         }
 
         if (bundleUnit === 'MONTH') {
@@ -219,7 +253,11 @@ export class StockService implements IStockService {
                 .groupBy(`DATE_FORMAT(price.date, '%Y-%m')`)
                 .getRawMany();
 
-            return { ...response, chartLength: stockCharts.length, chart: stockCharts };
+            return {
+                ...response,
+                chartLength: stockCharts.length,
+                chart: stockCharts,
+            };
         }
 
         const stockCharts = await this.priceRepository
@@ -230,6 +268,52 @@ export class StockService implements IStockService {
             .getRawMany();
 
         return { ...response, chartLength: stockCharts.length, chart: stockCharts };
+    }
+
+    @Transaction()
+    async getStocksOrderByCap(page?: number, size?: number): Promise<GetStockWithCapResponse> {
+        if (!size) size = 7;
+        if (!page) page = 1;
+
+        const lastDate = this.financeRepository
+            .createQueryBuilder()
+            .subQuery()
+            .addSelect('last.code, max(last.yymm) as last_date')
+            .from(Finance, 'last')
+            .groupBy('last.code')
+            .getQuery();
+
+        const [stocks, total] = await this.financeRepository
+            .createQueryBuilder('finance')
+            .innerJoin(lastDate, 'lastDate', 'finance.code = lastDate.code and finance.yymm = lastDate.last_date')
+            .leftJoinAndSelect('finance.code', 'CODE')
+            .take(size)
+            .skip((page - 1) * size)
+            .orderBy('finance.cap', 'DESC')
+            .getManyAndCount();
+
+        return {
+            total: total,
+            size: size,
+            page: page,
+            lastPage: Math.ceil(total / size),
+            data: stocks.map((stock) => ({
+                code: stock.code.krxCode,
+                name: stock.code.name,
+                cap: stock.cap,
+                yymm: stock.yymm,
+            })),
+        };
+        // this.financeRepository.createQueryBuilder()
+        // .subQuery()
+        // .select(['finance.code as code', 'finance.cap as cap'])
+        // .from(Finance, 'finance')
+        // .groupBy('finance.code')
+        // .getQuery();
+
+        // await this.stockTransactionRepository.findAnd
+
+        throw new Error('Method not implemented.');
     }
 
     toFinanceResponse(price: number, finances: Finance[]): FinanceResponse {
@@ -267,5 +351,15 @@ export class StockService implements IStockService {
         };
 
         return finance;
+    }
+
+    @Transaction()
+    async getStockInfo(stockId: string): Promise<INFO[]> {
+        try {
+            const response = await this.infoRepository.find();
+            return response;
+        } catch (error) {
+            throw new Error('Method not implemented.');
+        }
     }
 }
